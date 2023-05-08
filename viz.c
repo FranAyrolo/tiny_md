@@ -25,7 +25,7 @@ static void pre_display(void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(45.0, (float)win_x / win_y, 1.0, 0.0);
+    gluPerspective(45.0, (double)win_x / win_y, 1.0, 0.0);
     gluLookAt(1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.0, 0.0);
 
     glMatrixMode(GL_MODELVIEW);

@@ -1,0 +1,201 @@
+gcc -O1 -march=native (float)
+# started on Mon May  8 11:13:08 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,763.71 msec task-clock                       #    1.000 CPUs utilized             
+                17      context-switches                 #    2.513 /sec                      
+                 3      cpu-migrations                   #    0.444 /sec                      
+                77      page-faults                      #   11.384 /sec                      
+    33,346,604,850      cycles                           #    4.930 GHz                       
+    41,623,791,654      instructions                     #    1.25  insn per cycle            
+     8,471,838,607      branches                         #    1.253 G/sec                     
+       507,946,064      branch-misses                    #    6.00% of all branches           
+
+       6.764225088 seconds time elapsed
+
+       6.741274000 seconds user
+       0.012976000 seconds sys
+
+
+# started on Mon May  8 11:13:15 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,731.98 msec task-clock                       #    0.999 CPUs utilized             
+               155      context-switches                 #   23.024 /sec                      
+                 2      cpu-migrations                   #    0.297 /sec                      
+                75      page-faults                      #   11.141 /sec                      
+    33,421,695,436      cycles                           #    4.965 GHz                       
+    41,654,429,977      instructions                     #    1.25  insn per cycle            
+     8,479,051,709      branches                         #    1.260 G/sec                     
+       509,211,269      branch-misses                    #    6.01% of all branches           
+
+       6.739296697 seconds time elapsed
+
+       6.708395000 seconds user
+       0.013967000 seconds sys
+
+
+# started on Mon May  8 11:13:21 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,744.46 msec task-clock                       #    0.999 CPUs utilized             
+               348      context-switches                 #   51.598 /sec                      
+                 4      cpu-migrations                   #    0.593 /sec                      
+                77      page-faults                      #   11.417 /sec                      
+    33,516,801,289      cycles                           #    4.970 GHz                       
+    41,652,597,238      instructions                     #    1.24  insn per cycle            
+     8,478,545,481      branches                         #    1.257 G/sec                     
+       512,726,993      branch-misses                    #    6.05% of all branches           
+
+       6.754492311 seconds time elapsed
+
+       6.719760000 seconds user
+       0.014938000 seconds sys
+
+
+# started on Mon May  8 11:13:28 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,706.63 msec task-clock                       #    0.999 CPUs utilized             
+               231      context-switches                 #   34.444 /sec                      
+                 4      cpu-migrations                   #    0.596 /sec                      
+                76      page-faults                      #   11.332 /sec                      
+    33,275,950,615      cycles                           #    4.962 GHz                       
+    41,652,163,580      instructions                     #    1.25  insn per cycle            
+     8,479,423,465      branches                         #    1.264 G/sec                     
+       505,726,922      branch-misses                    #    5.96% of all branches           
+
+       6.715822320 seconds time elapsed
+
+       6.681358000 seconds user
+       0.015964000 seconds sys
+
+
+# started on Mon May  8 11:13:35 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,741.40 msec task-clock                       #    0.999 CPUs utilized             
+               304      context-switches                 #   45.094 /sec                      
+                 4      cpu-migrations                   #    0.593 /sec                      
+                79      page-faults                      #   11.719 /sec                      
+    33,504,706,721      cycles                           #    4.970 GHz                       
+    41,646,619,747      instructions                     #    1.24  insn per cycle            
+     8,477,802,408      branches                         #    1.258 G/sec                     
+       513,150,567      branch-misses                    #    6.05% of all branches           
+
+       6.751524183 seconds time elapsed
+
+       6.718816000 seconds user
+       0.012970000 seconds sys
+
+
+# started on Mon May  8 11:13:42 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,735.36 msec task-clock                       #    0.999 CPUs utilized             
+               241      context-switches                 #   35.781 /sec                      
+                 0      cpu-migrations                   #    0.000 /sec                      
+                78      page-faults                      #   11.581 /sec                      
+    33,472,609,196      cycles                           #    4.970 GHz                       
+    41,643,939,451      instructions                     #    1.24  insn per cycle            
+     8,475,163,232      branches                         #    1.258 G/sec                     
+       511,455,432      branch-misses                    #    6.03% of all branches           
+
+       6.745283127 seconds time elapsed
+
+       6.712759000 seconds user
+       0.012972000 seconds sys
+
+
+# started on Mon May  8 11:13:48 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,729.84 msec task-clock                       #    0.999 CPUs utilized             
+               253      context-switches                 #   37.594 /sec                      
+                 2      cpu-migrations                   #    0.297 /sec                      
+                78      page-faults                      #   11.590 /sec                      
+    33,360,127,299      cycles                           #    4.957 GHz                       
+    41,647,555,448      instructions                     #    1.25  insn per cycle            
+     8,477,194,046      branches                         #    1.260 G/sec                     
+       507,608,423      branch-misses                    #    5.99% of all branches           
+
+       6.739357805 seconds time elapsed
+
+       6.708665000 seconds user
+       0.011978000 seconds sys
+
+
+# started on Mon May  8 11:13:55 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,800.46 msec task-clock                       #    0.999 CPUs utilized             
+               218      context-switches                 #   32.057 /sec                      
+                 4      cpu-migrations                   #    0.588 /sec                      
+                76      page-faults                      #   11.176 /sec                      
+    33,794,371,634      cycles                           #    4.969 GHz                       
+    41,656,102,426      instructions                     #    1.23  insn per cycle            
+     8,479,791,517      branches                         #    1.247 G/sec                     
+       510,366,853      branch-misses                    #    6.02% of all branches           
+
+       6.809451346 seconds time elapsed
+
+       6.770993000 seconds user
+       0.019937000 seconds sys
+
+
+# started on Mon May  8 11:14:02 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,767.31 msec task-clock                       #    0.999 CPUs utilized             
+               214      context-switches                 #   31.623 /sec                      
+                 2      cpu-migrations                   #    0.296 /sec                      
+                76      page-faults                      #   11.230 /sec                      
+    33,590,308,357      cycles                           #    4.964 GHz                       
+    41,658,804,544      instructions                     #    1.24  insn per cycle            
+     8,481,591,237      branches                         #    1.253 G/sec                     
+       515,515,392      branch-misses                    #    6.08% of all branches           
+
+       6.776855882 seconds time elapsed
+
+       6.749084000 seconds user
+       0.008979000 seconds sys
+
+
+# started on Mon May  8 11:14:09 2023
+
+
+ Performance counter stats for './tiny_md':
+
+          6,747.28 msec task-clock                       #    0.999 CPUs utilized             
+               227      context-switches                 #   33.643 /sec                      
+                 1      cpu-migrations                   #    0.148 /sec                      
+                78      page-faults                      #   11.560 /sec                      
+    33,326,268,700      cycles                           #    4.939 GHz                       
+    41,649,765,856      instructions                     #    1.25  insn per cycle            
+     8,477,609,094      branches                         #    1.256 G/sec                     
+       507,322,944      branch-misses                    #    5.98% of all branches           
+
+       6.756460577 seconds time elapsed
+
+       6.721030000 seconds user
+       0.016965000 seconds sys
+
+
