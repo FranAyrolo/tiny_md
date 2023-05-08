@@ -1,8 +1,6 @@
-CC      = clang
-CFLAGS  = -Ofast -march=native -flto=thin 
-INLINE_FLAGS = #-finline-aggressive -finline-recursion=4
-LOOP_FLAGS = -faggressive-loop-transform #-funroll-all-loops 
-WFLAGS  = -std=c11 -Wall -Wextra -Werror -g
+CC      = gcc
+CFLAGS  = -O0
+WFLAGS  = -std=c11 -Wall -Wextra -Werror
 LDFLAGS = -lm
 
 TARGETS = tiny_md viz
@@ -18,10 +16,10 @@ tiny_md: tiny_md.o $(OBJECTS)
     $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
-    $(CC) $(WFLAGS) $(CPPFLAGS) $(CFLAGS) -c $<
+    $(CC) $(WFLAGS) $(CFLAGS) -c $<
 
 clean:
-    rm -f $(TARGETS) *.o *.xyz *.log .depend
+	rm -f $(TARGETS) *.o *.xyz *.log .depend
 
 .depend: $(SOURCES)
     $(CC) -MM $^ > $@
