@@ -10,19 +10,19 @@ OBJECTS = core.o wtime.o
 all: $(TARGETS)
 
 viz: viz.o $(OBJECTS)
-    $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lGL -lGLU -lglut
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lGL -lGLU -lglut
 
 tiny_md: tiny_md.o $(OBJECTS)
-    $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
-    $(CC) $(WFLAGS) $(CFLAGS) -c $<
+	$(CC) $(WFLAGS) $(CFLAGS) -c $<
 
 clean:
 	rm -f $(TARGETS) *.o *.xyz *.log .depend
 
 .depend: $(SOURCES)
-    $(CC) -MM $^ > $@
+	$(CC) -MM $^ > $@
 
 -include .depend
 
