@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 int main()
 {
     FILE *file_xyz, *file_thermo;
@@ -15,11 +14,20 @@ int main()
     file_thermo = fopen("thermo.log", "w");
     double Ekin, Epot, Temp, Pres; // variables macroscopicas
     double Rho, cell_V, cell_L, tail, Etail, Ptail;
-    double *rxyz, *vxyz, *fxyz; // variables microscopicas
 
-    rxyz = (double*)malloc(3 * N * sizeof(double));
-    vxyz = (double*)malloc(3 * N * sizeof(double));
-    fxyz = (double*)malloc(3 * N * sizeof(double));
+    struct Atoms* positions = malloc(sizeof(struct Atoms));
+    struct Atoms* velocities = malloc(sizeof(struct Atoms));
+    struct Atoms* forcess = malloc(sizeof(struct Atoms));
+
+    positions->x = (double*)malloc(sizeof(double) * N);
+    positions->y = (double*)malloc(sizeof(double) * N);
+    positions->z = (double*)malloc(sizeof(double) * N);
+    velocities->x = (double*)malloc(sizeof(double) * N);
+    velocities->y = (double*)malloc(sizeof(double) * N);
+    velocities->z = (double*)malloc(sizeof(double) * N);
+    forcess->x = (double*)malloc(sizeof(double) * N);
+    forcess->y = (double*)malloc(sizeof(double) * N);
+    forcess->z = (double*)malloc(sizeof(double) * N);
 
     printf("# Número de partículas:      %d\n", N);
     printf("# Temperatura de referencia: %.2f\n", T0);
@@ -30,10 +38,10 @@ int main()
     fprintf(file_thermo, "# t Temp Pres Epot Etot\n");
 
     srand(SEED);
-    double t = 0.0, sf;
+    double t = 0.0, sf = 0.0;
     double Rhob;
     Rho = RHOI;
-    init_pos(rxyz, Rho);
+    init_pos(positions, Rho);
     double start = wtime();
     for (int m = 0; m < 9; m++) {
         Rhob = Rho;
@@ -46,19 +54,23 @@ int main()
 
         int i = 0;
         sf = cbrt(Rhob / Rho);
-        for (int k = 0; k < 3 * N; k++) { // reescaleo posiciones a nueva densidad
-            rxyz[k] *= sf;
+        for (int k = 0; k < N; k++) { // reescaleo posiciones a nueva densidad
+            positions->x[k] *= sf;
+            positions->y[k] *= sf;
+            positions->z[k] *= sf;
         }
-        init_vel(vxyz, &Temp, &Ekin);
-        forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
+        init_vel(velocities, &Temp, &Ekin);
+        forces(positions, forcess, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
 
         for (i = 1; i < TEQ; i++) { // loop de equilibracion
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
+            velocity_verlet(positions, velocities, forcess, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                velocities->x[k] *= sf;
+                velocities->y[k] *= sf;
+                velocities->z[k] *= sf;
             }
         }
 
@@ -66,11 +78,13 @@ int main()
         double epotm = 0.0, presm = 0.0;
         for (i = TEQ; i < TRUN; i++) { // loop de medicion
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
+            velocity_verlet(positions, velocities, forcess, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                velocities->x[k] *= sf;
+                velocities->y[k] *= sf;
+                velocities->z[k] *= sf;
             }
 
             if (i % TMES == 0) {
@@ -83,8 +97,8 @@ int main()
 
                 fprintf(file_thermo, "%f %f %f %f %f\n", t, Temp, Pres, Epot, Epot + Ekin);
                 fprintf(file_xyz, "%d\n\n", N);
-                for (int k = 0; k < 3 * N; k += 3) {
-                    fprintf(file_xyz, "Ar %e %e %e\n", rxyz[k + 0], rxyz[k + 1], rxyz[k + 2]);
+                for (int k = 0; k < N; k++) {
+                    fprintf(file_xyz, "Ar %e %e %e\n", positions->x[k], positions->y[k], positions->z[k]);
                 }
             }
 
@@ -98,5 +112,17 @@ int main()
     printf("# Tiempo simulado = %f [fs]\n", t * 1.6);
     printf("# ns/day = %f\n", (1.6e-6 * t) / elapsed * 86400);
     //                       ^1.6 fs -> ns       ^sec -> day
+    free(positions->x);
+    free(positions->y);
+    free(positions->z);
+    free(positions);
+    free(velocities->x);
+    free(velocities->y);
+    free(velocities->z);
+    free(velocities);
+    free(forcess->x);
+    free(forcess->y);
+    free(forcess->z);
+    free(forcess);
     return 0;
 }

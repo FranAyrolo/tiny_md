@@ -10,9 +10,9 @@
 // variables globales
 static double Ekin, Epot, Temp, Pres; // variables macroscopicas
 static double Rho, V, box_size, tail, Etail, Ptail;
-static double *rxyz, *vxyz, *fxyz; // variables microscopicas
 static double Rhob, sf, epotm, presm;
 static int switcher = 0, frames = 0, mes;
+static struct Atoms *positions, *velocities, *forcess; // variables microscopicas
 
 
 // OpenGL specific drawing routines
@@ -103,10 +103,10 @@ static void draw_atoms(void)
     double dy;
     double dz;
 
-    for (di = 0; di < 3 * N; di += 3) {
-        dx = (rxyz[di + 0] / glL) * resize;
-        dy = (rxyz[di + 1] / glL) * resize;
-        dz = (rxyz[di + 2] / glL) * resize;
+    for (di = 0; di < N; di++) {
+        dx = (positions->x[di] / glL) * resize;
+        dy = (positions->y[di] / glL) * resize;
+        dz = (positions->z[di] / glL) * resize;
 
         glColor3d(0.0, 1.0, 0.0);
         glVertex3d(dx, dy, dz);
@@ -138,9 +138,9 @@ static void idle_func(void)
         Etail = tail * (double)N;
         Ptail = tail * Rho;
 
-        init_pos(rxyz, Rho);
-        init_vel(vxyz, &Temp, &Ekin);
-        forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, V, box_size);
+        init_pos(positions, Rho);
+        init_vel(velocities, &Temp, &Ekin);
+        forces(positions, forcess, &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
 
@@ -160,11 +160,13 @@ static void idle_func(void)
         Ptail = tail * Rho;
 
         sf = cbrt(Rhob / Rho);
-        for (int k = 0; k < 3 * N; k++) { // reescaleo posiciones a nueva densidad
-            rxyz[k] *= sf;
+        for (int k = 0; k < N; k++) { // reescaleo posiciones a nueva densidad
+            positions->x[k] *= sf;
+            positions->y[k] *= sf;
+            positions->z[k] *= sf;
         }
-        init_vel(vxyz, &Temp, &Ekin);
-        forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, V, box_size);
+        init_vel(velocities, &Temp, &Ekin);
+        forces(positions, forcess, &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
         if (fabs(Rho - (RHOI - 0.9f)) < 1e-6) {
@@ -176,12 +178,14 @@ static void idle_func(void)
 
         for (int i = frames; i < frames + TMES; i++) {
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho,
+            velocity_verlet(positions, velocities, forcess, &Epot, &Ekin, &Pres, &Temp, Rho,
                             V, box_size);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                velocities->x[k] *= sf;
+                velocities->y[k] *= sf;
+                velocities->z[k] *= sf;
             }
         }
 
@@ -201,12 +205,14 @@ static void idle_func(void)
 
         while (frames % TEQ != 0) {
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho,
+            velocity_verlet(positions, velocities, forcess, &Epot, &Ekin, &Pres, &Temp, Rho,
                             V, box_size);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                velocities->x[k] *= sf;
+                velocities->y[k] *= sf;
+                velocities->z[k] *= sf;
             }
 
             frames++;
@@ -263,10 +269,18 @@ int main(int argc, char** argv)
 {
 
     glutInit(&argc, argv);
-
-    rxyz = (double*)malloc(3 * N * sizeof(double));
-    vxyz = (double*)malloc(3 * N * sizeof(double));
-    fxyz = (double*)malloc(3 * N * sizeof(double));
+    positions = malloc(sizeof(struct Atoms));
+    positions->x = (double*)malloc(N * sizeof(double));
+    positions->y = (double*)malloc(N * sizeof(double));
+    positions->z = (double*)malloc(N * sizeof(double));
+    velocities = malloc(sizeof(struct Atoms));
+    velocities->x = (double*)malloc(N * sizeof(double));
+    velocities->y = (double*)malloc(N * sizeof(double));
+    velocities->z = (double*)malloc(N * sizeof(double));
+    forcess = malloc(sizeof(struct Atoms));
+    forcess->x = (double*)malloc(N * sizeof(double));
+    forcess->y = (double*)malloc(N * sizeof(double));
+    forcess->z = (double*)malloc(N * sizeof(double));
 
     // parametros iniciales para que los pueda usar (antes de modificar)
     // `idle_func`
@@ -279,9 +293,9 @@ int main(int argc, char** argv)
     Etail = tail * (double)N;
     Ptail = tail * Rho;
 
-    init_pos(rxyz, Rho);
-    init_vel(vxyz, &Temp, &Ekin);
-    forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, V, box_size);
+    init_pos(positions, Rho);
+    init_vel(velocities, &Temp, &Ekin);
+    forces(positions, forcess, &Epot, &Pres, &Temp, Rho, V, box_size);
     //
     //
 
