@@ -1,30 +1,28 @@
-CC      = clang
-CFLAGS  = -Ofast -march=native -flto=thin 
-INLINE_FLAGS = #-finline-aggressive -finline-recursion=4
-LOOP_FLAGS = -faggressive-loop-transform #-funroll-all-loops 
-WFLAGS  = -std=c11 -Wall -Wextra -Werror -g
+CC      = gcc
+CFLAGS  = -O2 -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
+WFLAGS  = -std=c11 -Wall -Wextra -Werror
 LDFLAGS = -lm
 
-TARGETS = tiny_md viz
+TARGETS = tiny_md #viz
 SOURCES = $(shell echo *.c)
 OBJECTS = core.o wtime.o
 
 all: $(TARGETS)
 
 viz: viz.o $(OBJECTS)
-    $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lGL -lGLU -lglut
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) -lGL -lGLU -lglut
 
 tiny_md: tiny_md.o $(OBJECTS)
-    $(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
-    $(CC) $(WFLAGS) $(CPPFLAGS) $(CFLAGS) -c $<
+	$(CC) $(WFLAGS) $(CPPFLAGS) $(CFLAGS) -c $<
 
 clean:
-    rm -f $(TARGETS) *.o *.xyz *.log .depend
+	rm -f $(TARGETS) *.o *.xyz *.log .depend
 
 .depend: $(SOURCES)
-    $(CC) -MM $^ > $@
+	$(CC) -MM $^ > $@
 
 -include .depend
 
