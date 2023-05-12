@@ -107,6 +107,10 @@ void forces(const AtomSystem* system, double* epot, double* pres,
         double yi = system->positions[i].y;
         double zi = system->positions[i].z;
 
+        double forces_ix = 0.0;
+        double forces_iy = 0.0;
+        double forces_iz = 0.0;
+
         for (int j = i + 1; j < N; j++) {
 
             double xj = system->positions[j].x;
@@ -123,24 +127,27 @@ void forces(const AtomSystem* system, double* epot, double* pres,
 
             double rij2 = rx * rx + ry * ry + rz * rz;
 
-            if (rij2 <= rcut2) {
-                double r2inv = 1.0 / rij2;
-                double r6inv = r2inv * r2inv * r2inv;
+            double r2inv = 1.0 / rij2;
+            double r6inv = r2inv * r2inv * r2inv;
 
-                double fr = 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
+            double fr = 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
 
-                system->forces[i].x += fr * rx;
-                system->forces[i].y += fr * ry;
-                system->forces[i].z += fr * rz;
+            double condition = (rij2 <= rcut2) ? 1.0 : 0.0;
 
-                system->forces[j].x -= fr * rx;
-                system->forces[j].y -= fr * ry;
-                system->forces[j].z -= fr * rz;
+            forces_ix += condition * fr * rx;
+            forces_iy += condition * fr * ry;
+            forces_iz += condition * fr * rz;
 
-                *epot += 4.0 * r6inv * (r6inv - 1.0) - ECUT;
-                pres_vir += fr * rij2;
-            }
+            system->forces[j].x -= condition * fr * rx;
+            system->forces[j].y -= condition * fr * ry;
+            system->forces[j].z -= condition * fr * rz;
+
+            *epot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
+            pres_vir += condition * fr * rij2;
         }
+        system->forces[i].x += forces_ix;
+        system->forces[i].y += forces_iy;
+        system->forces[i].z += forces_iz;
     }
     pres_vir /= (V * 3.0);
     *pres = *temp * rho + pres_vir;
