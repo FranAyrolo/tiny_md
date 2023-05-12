@@ -23,26 +23,22 @@ void destroyAtomSystem(AtomSystem* system) {
 
 void init_pos(AtomSystem* system, const double rho)
 {
-    // inicialización de las posiciones de los átomos en un cristal FCC
-
     double a = cbrt(4.0 / rho);
     int nucells = ceil(cbrt((double)N / 4.0));
-    int idx = 0;
+    int numAtoms = nucells * nucells * nucells;
+    int idx = idx = 0;
+    for(int linearIdx = 0; linearIdx < numAtoms; linearIdx++) {
+        int i = linearIdx / (nucells * nucells);
+        int j = (linearIdx / nucells) % nucells;
+        int k = linearIdx % nucells;
 
-    for (int i = 0; i < nucells; i++) {
-        for (int j = 0; j < nucells; j++) {
-            for (int k = 0; k < nucells; k++) {
-                system->positions[idx+0] = (Vector3D) { i * a, j * a, k * a };
-                system->positions[idx+1] = (Vector3D) { (i + 0.5) * a, (j + 0.5) * a, k * a };
-                system->positions[idx+2] = (Vector3D) { (i + 0.5) * a, j * a, (k + 0.5) * a };
-                system->positions[idx+3] = (Vector3D) { i * a, (j + 0.5) * a, (k + 0.5) * a };
-
-                idx += 4;
-            }
-        }
+        system->positions[idx] = (Vector3D) { i * a, j * a, k * a };
+        system->positions[idx + 1] = (Vector3D) { (i + 0.5) * a, (j + 0.5) * a, k * a };
+        system->positions[idx + 2] = (Vector3D) { (i + 0.5) * a, j * a, (k + 0.5) * a };
+        system->positions[idx + 3] = (Vector3D) { i * a, (j + 0.5) * a, (k + 0.5) * a };
+        idx += 4;
     }
 }
-
 
 void init_vel(AtomSystem* system, double* temp, double* ekin)
 {
