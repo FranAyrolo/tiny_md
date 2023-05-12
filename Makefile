@@ -1,10 +1,10 @@
 CC      = gcc
-CFLAGS  = -O2 -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
-WFLAGS  = -std=c11 -Wall -Wextra -Werror
-LDFLAGS = -lm
+CFLAGS	= -O2 -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
+WFLAGS	= -std=c11 -Wall -Wextra -g
+LDFLAGS	= -lm
 
-TARGETS = tiny_md #viz
-SOURCES = $(shell echo *.c)
+TARGETS	= tiny_md viz
+SOURCES	= $(shell echo *.c)
 OBJECTS = core.o wtime.o
 
 all: $(TARGETS)
@@ -16,7 +16,7 @@ tiny_md: tiny_md.o $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
-	$(CC) $(WFLAGS) $(CFLAGS) -c $<
+	$(CC) $(WFLAGS) $(CPPFLAGS) $(CFLAGS) -c $<
 
 clean:
 	rm -f $(TARGETS) *.o *.xyz *.log .depend
@@ -26,4 +26,4 @@ clean:
 
 -include .depend
 
-.PHONY: clean all                      
+.PHONY: clean all
