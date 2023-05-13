@@ -8,11 +8,13 @@
 #include <stdlib.h>
 
 // variables globales
-static double Ekin, Epot, Temp, Pres; // variables macroscopicas
-static double Rho, V, box_size, tail, Etail, Ptail;
-static double *rxyz, *vxyz, *fxyz; // variables microscopicas
-static double Rhob, sf, epotm, presm;
+static float Ekin, Epot, Temp, Pres; // variables macroscopicas
+static float Rho, V, box_size, tail, Etail, Ptail;
+static float Rhob, sf, epotm, presm;
 static int switcher = 0, frames = 0, mes;
+static Vector_SOA* v_positions;
+static Vector_SOA* v_velocities;
+static Vector_SOA* v_forces;
 
 
 // OpenGL specific drawing routines
@@ -44,14 +46,14 @@ static void post_display(void)
 
 static void draw_atoms(void)
 {
-    double glL = cbrt((double)N / (RHOI - 0.8));
+    float glL = cbrt((float)N / (RHOI - 0.8));
 
-    double resize = 0.5;
+    float resize = 0.5;
 
     // grafico las lineas que delimitan la caja de simulación
     glBegin(GL_LINES);
 
-    double box_line = resize * (box_size / glL);
+    float box_line = resize * (box_size / glL);
     glColor3d(0.0, 0.0, 1.0);
 
     glVertex3d(0.0, 0.0, 0.0);
@@ -99,14 +101,14 @@ static void draw_atoms(void)
 
     int di;
 
-    double dx;
-    double dy;
-    double dz;
+    float dx;
+    float dy;
+    float dz;
 
-    for (di = 0; di < 3 * N; di += 3) {
-        dx = (rxyz[di + 0] / glL) * resize;
-        dy = (rxyz[di + 1] / glL) * resize;
-        dz = (rxyz[di + 2] / glL) * resize;
+    for (di = 0; di < N; di++) {
+        dx = (v_positions->x[di] / glL) * resize;
+        dy = (v_positions->y[di] / glL) * resize;
+        dz = (v_positions->z[di] / glL) * resize;
 
         glColor3d(0.0, 1.0, 0.0);
         glVertex3d(dx, dy, dz);
@@ -132,39 +134,41 @@ static void idle_func(void)
     if (switcher == 3) {
 
         Rho = RHOI;
-        V = (double)N / Rho;
+        V = (float)N / Rho;
         box_size = cbrt(V);
         tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-        Etail = tail * (double)N;
+        Etail = tail * (float)N;
         Ptail = tail * Rho;
 
-        init_pos(rxyz, Rho);
-        init_vel(vxyz, &Temp, &Ekin);
-        forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, V, box_size);
+        init_pos(v_positions, Rho);
+        init_vel(v_velocities, &Temp, &Ekin);
+        forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
 
     } else if (switcher == 2) { // imprimo propiedades en la terminal y cambio la densidad
 
-        printf("%f\t%f\t%f\t%f\n", Rho, V, epotm / (double)mes,
-               presm / (double)mes);
+        printf("%f\t%f\t%f\t%f\n", Rho, V, epotm / (float)mes,
+               presm / (float)mes);
 
         Rhob = Rho;
         Rho = Rho - 0.1;
 
 
-        V = (double)N / Rho;
+        V = (float)N / Rho;
         box_size = cbrt(V);
         tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-        Etail = tail * (double)N;
+        Etail = tail * (float)N;
         Ptail = tail * Rho;
 
         sf = cbrt(Rhob / Rho);
-        for (int k = 0; k < 3 * N; k++) { // reescaleo posiciones a nueva densidad
-            rxyz[k] *= sf;
+        for (int k = 0; k < N; k++) { // reescaleo posiciones a nueva densidad
+            v_positions->x[k] *= sf;
+            v_positions->y[k] *= sf;
+            v_positions->z[k] *= sf;
         }
-        init_vel(vxyz, &Temp, &Ekin);
-        forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, V, box_size);
+        init_vel(v_velocities, &Temp, &Ekin);
+        forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
         if (fabs(Rho - (RHOI - 0.9f)) < 1e-6) {
@@ -176,12 +180,14 @@ static void idle_func(void)
 
         for (int i = frames; i < frames + TMES; i++) {
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho,
+            velocity_verlet(v_positions, v_velocities, v_forces, &Epot, &Ekin, &Pres, &Temp, Rho,
                             V, box_size);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                v_velocities->x[k] *= sf;
+                v_velocities->y[k] *= sf;
+                v_velocities->z[k] *= sf;
             }
         }
 
@@ -201,12 +207,14 @@ static void idle_func(void)
 
         while (frames % TEQ != 0) {
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho,
+            velocity_verlet(v_positions, v_velocities, v_forces, &Epot, &Ekin, &Pres, &Temp, Rho,
                             V, box_size);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                v_velocities->x[k] *= sf;
+                v_velocities->y[k] *= sf;
+                v_velocities->z[k] *= sf;
             }
 
             frames++;
@@ -261,27 +269,26 @@ static void open_glut_window(void)
 
 int main(int argc, char** argv)
 {
+    v_positions = (Vector_SOA*)malloc(sizeof(Vector_SOA));
+    v_velocities = (Vector_SOA*)malloc(sizeof(Vector_SOA));
+    v_forces = (Vector_SOA*)malloc(sizeof(Vector_SOA));
 
     glutInit(&argc, argv);
-
-    rxyz = (double*)malloc(3 * N * sizeof(double));
-    vxyz = (double*)malloc(3 * N * sizeof(double));
-    fxyz = (double*)malloc(3 * N * sizeof(double));
 
     // parametros iniciales para que los pueda usar (antes de modificar)
     // `idle_func`
     srand(SEED);
     Rho = RHOI;
     Rhob = Rho;
-    V = (double)N / Rho;
+    V = (float)N / Rho;
     box_size = cbrt(V);
     tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-    Etail = tail * (double)N;
+    Etail = tail * (float)N;
     Ptail = tail * Rho;
 
-    init_pos(rxyz, Rho);
-    init_vel(vxyz, &Temp, &Ekin);
-    forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, V, box_size);
+    init_pos(v_positions, Rho);
+    init_vel(v_velocities, &Temp, &Ekin);
+    forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, V, box_size);
     //
     //
 

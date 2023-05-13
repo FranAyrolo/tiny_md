@@ -13,21 +13,24 @@ int main()
     FILE *file_xyz, *file_thermo;
     file_xyz = fopen("trajectory.xyz", "w");
     file_thermo = fopen("thermo.log", "w");
-    double Ekin, Epot, Temp, Pres; // variables macroscopicas
-    double Rho, cell_V, cell_L, tail, Etail, Ptail;
+    float Ekin, Epot, Temp, Pres; // variables macroscopicas
+    float Rho, cell_V, cell_L, tail, Etail, Ptail;
 
     Vector_SOA* v_positions = (Vector_SOA*)malloc(sizeof(Vector_SOA));
-    v_positions->x = (double*)malloc((N+1) * sizeof(double));
-    v_positions->y = (double*)malloc((N+1) * sizeof(double));
-    v_positions->z = (double*)malloc((N+1) * sizeof(double));
+    /*v_positions->x = (float*)malloc(N * sizeof(float));
+    v_positions->y = (float*)malloc(N * sizeof(float));
+    v_positions->z = (float*)malloc(N * sizeof(float));
+    v_positions->w = (float*)malloc(N * sizeof(float));*/
     Vector_SOA* v_velocities = (Vector_SOA*)malloc(sizeof(Vector_SOA));
-    v_velocities->x = (double*)malloc(N * sizeof(double));
-    v_velocities->y = (double*)malloc(N * sizeof(double));
-    v_velocities->z = (double*)malloc(N * sizeof(double));
+    /*v_velocities->x = (float*)malloc(N * sizeof(float));
+    v_velocities->y = (float*)malloc(N * sizeof(float));
+    v_velocities->z = (float*)malloc(N * sizeof(float));
+    v_velocities->w = (float*)malloc(N * sizeof(float));*/
     Vector_SOA* v_forces = (Vector_SOA*)malloc(sizeof(Vector_SOA));
-    v_forces->x = (double*)malloc(N * sizeof(double));
-    v_forces->y = (double*)malloc(N * sizeof(double));
-    v_forces->z = (double*)malloc(N * sizeof(double));
+    /*v_forces->x = (float*)malloc(N * sizeof(float));
+    v_forces->y = (float*)malloc(N * sizeof(float));
+    v_forces->z = (float*)malloc(N * sizeof(float));
+    v_forces->w = (float*)malloc(N * sizeof(float));*/
     
 
     printf("# Número de partículas:      %d\n", N);
@@ -39,18 +42,18 @@ int main()
     fprintf(file_thermo, "# t Temp Pres Epot Etot\n");
 
     srand(SEED);
-    double t = 0.0, sf;
-    double Rhob;
+    float t = 0.0, sf;
+    float Rhob;
     Rho = RHOI;
     init_pos(v_positions, Rho);
     double start = wtime();
     for (int m = 0; m < 9; m++) {
         Rhob = Rho;
-        Rho = RHOI - 0.1 * (double)m;
-        cell_V = (double)N / Rho;
+        Rho = RHOI - 0.1 * (float)m;
+        cell_V = (float)N / Rho;
         cell_L = cbrt(cell_V);
         tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-        Etail = tail * (double)N;
+        Etail = tail * (float)N;
         Ptail = tail * Rho;
 
         int i = 0;
@@ -59,6 +62,7 @@ int main()
             v_positions->x[k] *= sf;
             v_positions->y[k] *= sf;
             v_positions->z[k] *= sf;
+            v_positions->w[k] *= sf;
         }
         init_vel(v_velocities, &Temp, &Ekin);
         forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
@@ -72,11 +76,12 @@ int main()
                 v_velocities->x[k] *= sf;
                 v_velocities->y[k] *= sf;
                 v_velocities->z[k] *= sf;
+                v_velocities->w[k] *= sf;
             }
         }
 
         int mes = 0;
-        double epotm = 0.0, presm = 0.0;
+        float epotm = 0.0, presm = 0.0;
         for (i = TEQ; i < TRUN; i++) { // loop de medicion
 
             velocity_verlet(v_positions, v_velocities, v_forces, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
@@ -86,6 +91,7 @@ int main()
                 v_velocities->x[k] *= sf;
                 v_velocities->y[k] *= sf;
                 v_velocities->z[k] *= sf;
+                v_velocities->w[k] *= sf;
             }
 
             if (i % TMES == 0) {
@@ -99,13 +105,13 @@ int main()
                 fprintf(file_thermo, "%f %f %f %f %f\n", t, Temp, Pres, Epot, Epot + Ekin);
                 fprintf(file_xyz, "%d\n\n", N);
                 for (int k = 0; k < N; k++) {
-                    fprintf(file_xyz, "Ar %e %e %e\n", v_positions->x[k + 0], v_positions->y[k + 1], v_positions->z[k + 2]);
+                    //fprintf(file_xyz, "Ar %e %e %e\n", v_positions->x[k + 0], v_positions->y[k + 1], v_positions->z[k + 2]);
                 }
             }
 
             t += DT;
         }
-        printf("%f\t%f\t%f\t%f\n", Rho, cell_V, epotm / (double)mes, presm / (double)mes);
+        printf("%f\t%f\t%f\t%f\n", Rho, cell_V, epotm / (float)mes, presm / (float)mes);
     }
 
     double elapsed = wtime() - start;
