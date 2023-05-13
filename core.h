@@ -7,7 +7,7 @@ typedef struct {
     float x[N];
     float y[N];
     float z[N];
-    float w[N];
+    //float w[N];
 } Vector_SOA;
 
 void init_pos(Vector_SOA* v_positions, const float rho);

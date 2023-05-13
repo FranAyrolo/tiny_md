@@ -62,7 +62,7 @@ int main()
             v_positions->x[k] *= sf;
             v_positions->y[k] *= sf;
             v_positions->z[k] *= sf;
-            v_positions->w[k] *= sf;
+            // v_positions->w[k] *= sf;
         }
         init_vel(v_velocities, &Temp, &Ekin);
         forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
@@ -76,7 +76,7 @@ int main()
                 v_velocities->x[k] *= sf;
                 v_velocities->y[k] *= sf;
                 v_velocities->z[k] *= sf;
-                v_velocities->w[k] *= sf;
+                // v_velocities->w[k] *= sf;
             }
         }
 
@@ -91,7 +91,7 @@ int main()
                 v_velocities->x[k] *= sf;
                 v_velocities->y[k] *= sf;
                 v_velocities->z[k] *= sf;
-                v_velocities->w[k] *= sf;
+                // v_velocities->w[k] *= sf;
             }
 
             if (i % TMES == 0) {
