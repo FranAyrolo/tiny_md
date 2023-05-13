@@ -15,11 +15,20 @@ int main()
     file_thermo = fopen("thermo.log", "w");
     double Ekin, Epot, Temp, Pres; // variables macroscopicas
     double Rho, cell_V, cell_L, tail, Etail, Ptail;
-    double *rxyz, *vxyz, *fxyz; // variables microscopicas
 
-    rxyz = (double*)malloc(3 * N * sizeof(double));
-    vxyz = (double*)malloc(3 * N * sizeof(double));
-    fxyz = (double*)malloc(3 * N * sizeof(double));
+    Vector_SOA* v_positions = (Vector_SOA*)malloc(sizeof(Vector_SOA));
+    v_positions->x = (double*)malloc((N+1) * sizeof(double));
+    v_positions->y = (double*)malloc((N+1) * sizeof(double));
+    v_positions->z = (double*)malloc((N+1) * sizeof(double));
+    Vector_SOA* v_velocities = (Vector_SOA*)malloc(sizeof(Vector_SOA));
+    v_velocities->x = (double*)malloc(N * sizeof(double));
+    v_velocities->y = (double*)malloc(N * sizeof(double));
+    v_velocities->z = (double*)malloc(N * sizeof(double));
+    Vector_SOA* v_forces = (Vector_SOA*)malloc(sizeof(Vector_SOA));
+    v_forces->x = (double*)malloc(N * sizeof(double));
+    v_forces->y = (double*)malloc(N * sizeof(double));
+    v_forces->z = (double*)malloc(N * sizeof(double));
+    
 
     printf("# Número de partículas:      %d\n", N);
     printf("# Temperatura de referencia: %.2f\n", T0);
@@ -33,7 +42,7 @@ int main()
     double t = 0.0, sf;
     double Rhob;
     Rho = RHOI;
-    init_pos(rxyz, Rho);
+    init_pos(v_positions, Rho);
     double start = wtime();
     for (int m = 0; m < 9; m++) {
         Rhob = Rho;
@@ -46,19 +55,23 @@ int main()
 
         int i = 0;
         sf = cbrt(Rhob / Rho);
-        for (int k = 0; k < 3 * N; k++) { // reescaleo posiciones a nueva densidad
-            rxyz[k] *= sf;
+        for (int k = 0; k < N; k++) { // reescaleo posiciones a nueva densidad
+            v_positions->x[k] *= sf;
+            v_positions->y[k] *= sf;
+            v_positions->z[k] *= sf;
         }
-        init_vel(vxyz, &Temp, &Ekin);
-        forces(rxyz, fxyz, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
+        init_vel(v_velocities, &Temp, &Ekin);
+        forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
 
         for (i = 1; i < TEQ; i++) { // loop de equilibracion
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
+            velocity_verlet(v_positions, v_velocities, v_forces, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                v_velocities->x[k] *= sf;
+                v_velocities->y[k] *= sf;
+                v_velocities->z[k] *= sf;
             }
         }
 
@@ -66,11 +79,13 @@ int main()
         double epotm = 0.0, presm = 0.0;
         for (i = TEQ; i < TRUN; i++) { // loop de medicion
 
-            velocity_verlet(rxyz, vxyz, fxyz, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
+            velocity_verlet(v_positions, v_velocities, v_forces, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
 
             sf = sqrt(T0 / Temp);
-            for (int k = 0; k < 3 * N; k++) { // reescaleo de velocidades
-                vxyz[k] *= sf;
+            for (int k = 0; k < N; k++) { // reescaleo de velocidades
+                v_velocities->x[k] *= sf;
+                v_velocities->y[k] *= sf;
+                v_velocities->z[k] *= sf;
             }
 
             if (i % TMES == 0) {
@@ -83,8 +98,8 @@ int main()
 
                 fprintf(file_thermo, "%f %f %f %f %f\n", t, Temp, Pres, Epot, Epot + Ekin);
                 fprintf(file_xyz, "%d\n\n", N);
-                for (int k = 0; k < 3 * N; k += 3) {
-                    fprintf(file_xyz, "Ar %e %e %e\n", rxyz[k + 0], rxyz[k + 1], rxyz[k + 2]);
+                for (int k = 0; k < N; k++) {
+                    fprintf(file_xyz, "Ar %e %e %e\n", v_positions->x[k + 0], v_positions->y[k + 1], v_positions->z[k + 2]);
                 }
             }
 
