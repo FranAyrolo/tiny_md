@@ -30,7 +30,7 @@ int main()
     double t = 0.0, sf;
     double Rhob;
     Rho = RHOI;
-    init_pos(system, Rho);
+    init_pos(system->positions, Rho);
     double start = wtime();
     for (int m = 0; m < 9; m++) {
         Rhob = Rho;
@@ -48,12 +48,13 @@ int main()
             system->positions[k].y *= sf;
             system->positions[k].z *= sf;
         }
-        init_vel(system, &Temp, &Ekin);
-        forces(system, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
+        init_vel(system->velocities, &Temp, &Ekin);
+        forces(system->positions, system->forces, &Epot, &Pres, &Temp, Rho, cell_V, cell_L);
 
         for (i = 1; i < TEQ; i++) { // loop de equilibracion
 
-            velocity_verlet(system, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
+            velocity_verlet(system->positions, system->velocities, system->forces, &Epot, &Ekin, &Pres,
+                    &Temp, Rho, cell_V, cell_L);
 
             sf = sqrt(T0 / Temp);
             for (int k = 0; k < N; k++) { // reescaleo de velocidades
@@ -67,7 +68,8 @@ int main()
         double epotm = 0.0, presm = 0.0;
         for (i = TEQ; i < TRUN; i++) { // loop de medicion
 
-            velocity_verlet(system, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
+            velocity_verlet(system->positions, system->velocities, system->forces, &Epot, &Ekin, &Pres,
+                    &Temp, Rho, cell_V, cell_L);
 
             sf = sqrt(T0 / Temp);
             for (int k = 0; k < N; k++) { // reescaleo de velocidades

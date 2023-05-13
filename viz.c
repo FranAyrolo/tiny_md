@@ -140,9 +140,9 @@ static void idle_func(void)
         Etail = tail * (double)N;
         Ptail = tail * Rho;
 
-        init_pos(systemA, Rho);
-        init_vel(systemA, &Temp, &Ekin);
-        forces(systemA, &Epot, &Pres, &Temp, Rho, V, box_size);
+        init_pos(systemA->positions, Rho);
+        init_vel(systemA->velocities, &Temp, &Ekin);
+        forces(systemA->positions, systemA->forces, &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
 
@@ -167,8 +167,8 @@ static void idle_func(void)
             systemA->positions[k].y *= sf;
             systemA->positions[k].z *= sf;
         }
-        init_vel(systemA, &Temp, &Ekin);
-        forces(systemA, &Epot, &Pres, &Temp, Rho, V, box_size);
+        init_vel(systemA->velocities, &Temp, &Ekin);
+        forces(systemA->positions, systemA->forces, &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
         if (fabs(Rho - (RHOI - 0.9f)) < 1e-6) {
@@ -180,8 +180,8 @@ static void idle_func(void)
 
         for (int i = frames; i < frames + TMES; i++) {
 
-            velocity_verlet(systemA, &Epot, &Ekin, &Pres, &Temp, Rho,
-                            V, box_size);
+            velocity_verlet(systemA->positions, systemA->velocities, systemA->forces, &Epot, &Ekin, &Pres,
+                    &Temp, Rho, V, box_size);
 
             sf = sqrt(T0 / Temp);
             for (int k = 0; k < N; k++) { // reescaleo de velocidades
@@ -207,8 +207,8 @@ static void idle_func(void)
 
         while (frames % TEQ != 0) {
 
-            velocity_verlet(systemA, &Epot, &Ekin, &Pres, &Temp, Rho,
-                            V, box_size);
+            velocity_verlet(systemA->positions, systemA->velocities, systemA->forces, &Epot, &Ekin, &Pres,
+                    &Temp, Rho, V, box_size);
 
             sf = sqrt(T0 / Temp);
             for (int k = 0; k < N; k++) { // reescaleo de velocidades
@@ -285,9 +285,9 @@ int main(int argc, char** argv)
     Etail = tail * (double)N;
     Ptail = tail * Rho;
 
-    init_pos(systemA, Rho);
-    init_vel(systemA, &Temp, &Ekin);
-    forces(systemA, &Epot, &Pres, &Temp, Rho, V, box_size);
+    init_pos(systemA->positions, Rho);
+    init_vel(systemA->velocities, &Temp, &Ekin);
+    forces(systemA->positions, systemA->forces, &Epot, &Pres, &Temp, Rho, V, box_size);
     //
     //
 
