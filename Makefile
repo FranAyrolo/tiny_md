@@ -1,10 +1,10 @@
 CC      = gcc
-CFLAGS  = -Ofast -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
-WFLAGS	= -std=c11 -Wall -Wextra -g
-LDFLAGS	= -lm
+CFLAGS  = -O2 -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
+WFLAGS  = -std=c11 -Wall -Wextra -Werror
+LDFLAGS = -lm
 
-TARGETS	= tiny_md viz
-SOURCES	= $(shell echo *.c)
+TARGETS = tiny_md #viz
+SOURCES = $(shell echo *.c)
 OBJECTS = core.o wtime.o
 
 all: $(TARGETS)

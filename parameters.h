@@ -15,7 +15,7 @@
 #endif
 
 #ifndef N // número de particulas (debe ser un 4m^3 para el cristal inicial)
-#define N 256
+#define N 512
 #endif
 
 #ifndef SEED // rand SEED para las velocidades
