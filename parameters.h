@@ -10,6 +10,9 @@
 
 #include <time.h> // time(NULL)
 
+#ifndef EPOCHS // el loop más grande
+#define EPOCHS 10
+#endif
 
 #ifndef N // número de particulas (debe ser un 4m^3 para el cristal inicial)
 #define N 256

@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
 int main()
 {
     FILE *file_xyz, *file_thermo;
@@ -35,7 +34,7 @@ int main()
     Rho = RHOI;
     init_pos(rxyz, Rho);
     double start = wtime();
-    for (int m = 0; m < 9; m++) {
+    for (int m = 0; m < EPOCHS; m++) {
         Rhob = Rho;
         Rho = RHOI - 0.1 * (double)m;
         cell_V = (double)N / Rho;
@@ -98,5 +97,11 @@ int main()
     printf("# Tiempo simulado = %f [fs]\n", t * 1.6);
     printf("# ns/day = %f\n", (1.6e-6 * t) / elapsed * 86400);
     //                       ^1.6 fs -> ns       ^sec -> day
+    free(rxyz);
+    free(vxyz);
+    free(fxyz);
+    fclose(file_xyz);
+    fclose(file_thermo);
+    
     return 0;
 }

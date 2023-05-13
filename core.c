@@ -41,7 +41,7 @@ void init_pos(double* rxyz, const double rho)
 }
 
 
-void init_vel(double* vxyz, double* temp, double* ekin)
+void init_vel(double* restrict vxyz, double* restrict temp, double* restrict ekin)
 {
     // inicialización de velocidades aleatorias
 
@@ -88,8 +88,8 @@ static double minimum_image(double cordi, const double cell_length)
 }
 
 
-void forces(const double* rxyz, double* fxyz, double* epot, double* pres,
-            const double* temp, const double rho, const double V, const double L)
+void forces(const double* restrict rxyz, double* restrict fxyz, double* restrict epot, double* restrict pres,
+            const double* restrict temp, const double rho, const double V, const double L)
 {
     // calcula las fuerzas LJ (12-6)
 
@@ -122,23 +122,23 @@ void forces(const double* rxyz, double* fxyz, double* epot, double* pres,
 
             double rij2 = rx * rx + ry * ry + rz * rz;
 
-            if (rij2 <= rcut2) {
-                double r2inv = 1.0 / rij2;
-                double r6inv = r2inv * r2inv * r2inv;
+            //if (rij2 <= rcut2) {
+            double r2inv = 1.0 / rij2;
+            double r6inv = r2inv * r2inv * r2inv;
 
-                double fr = 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
+            double fr = 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
 
-                fxyz[i + 0] += fr * rx;
-                fxyz[i + 1] += fr * ry;
-                fxyz[i + 2] += fr * rz;
+            fxyz[i + 0] = fxyz[i + 0] + (int)(rij2 <= rcut2) * fr * rx;
+            fxyz[i + 1] = fxyz[i + 1] + (int)(rij2 <= rcut2) * fr * ry;
+            fxyz[i + 2] = fxyz[i + 2] + (int)(rij2 <= rcut2) * fr * rz;
 
-                fxyz[j + 0] -= fr * rx;
-                fxyz[j + 1] -= fr * ry;
-                fxyz[j + 2] -= fr * rz;
+            fxyz[j + 0] = fxyz[j + 0] - (int)(rij2 <= rcut2) * fr * rx;
+            fxyz[j + 1] = fxyz[j + 1] - (int)(rij2 <= rcut2) * fr * ry;
+            fxyz[j + 2] = fxyz[j + 2] - (int)(rij2 <= rcut2) * fr * rz;
 
-                *epot += 4.0 * r6inv * (r6inv - 1.0) - ECUT;
-                pres_vir += fr * rij2;
-            }
+            *epot = (*epot) + (int)(rij2 <= rcut2) * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
+            pres_vir = pres_vir + (int)(rij2 <= rcut2) * fr * rij2;
+            //}
         }
     }
     pres_vir /= (V * 3.0);
@@ -158,8 +158,8 @@ static double pbc(double cordi, const double cell_length)
 }
 
 
-void velocity_verlet(double* rxyz, double* vxyz, double* fxyz, double* epot,
-                     double* ekin, double* pres, double* temp, const double rho,
+void velocity_verlet(double* restrict rxyz, double* restrict vxyz, double* restrict fxyz, double* restrict epot,
+                     double* ekin, double* restrict pres, double* restrict temp, const double rho,
                      const double V, const double L)
 {
 
