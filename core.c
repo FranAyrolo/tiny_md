@@ -6,12 +6,12 @@
 
 #define ECUT (4.0 * (pow(RCUT, -12) - pow(RCUT, -6)))
 
-void init_pos(Vector_SOA* restrict v_positions, const double rho)
+void init_pos(Vector_SOA* restrict v_positions, const float rho)
 {
     // Initialization of atom positions in an FCC crystal
 
-    double a = cbrt(4.0 / rho);
-    int nucells = ceil(cbrt((double)N / 4.0));
+    float a = cbrt(4.0 / rho);
+    int nucells = ceil(cbrt((float)N / 4.0));
     int idx = 0;
 
     for (int i = 0; i < nucells * nucells * nucells; i++) {
@@ -39,16 +39,16 @@ void init_pos(Vector_SOA* restrict v_positions, const double rho)
 }
 
 
-void init_vel(Vector_SOA* restrict v_velocities, double* restrict temp, double* restrict ekin)
+void init_vel(Vector_SOA* restrict v_velocities, float* restrict temp, float* restrict ekin)
 {
     // inicialización de velocidades aleatorias
 
-    double sf, sumvx = 0.0, sumvy = 0.0, sumvz = 0.0, sumv2 = 0.0;
+    float sf, sumvx = 0.0, sumvy = 0.0, sumvz = 0.0, sumv2 = 0.0;
 
     for (int i = 0; i < N; i++) {
-        v_velocities->x[i] = rand() / (double)RAND_MAX - 0.5;
-        v_velocities->y[i] = rand() / (double)RAND_MAX - 0.5;
-        v_velocities->z[i] = rand() / (double)RAND_MAX - 0.5;
+        v_velocities->x[i] = rand() / (float)RAND_MAX - 0.5;
+        v_velocities->y[i] = rand() / (float)RAND_MAX - 0.5;
+        v_velocities->z[i] = rand() / (float)RAND_MAX - 0.5;
 
         sumvx += v_velocities->x[i];
         sumvy += v_velocities->y[i];
@@ -57,9 +57,9 @@ void init_vel(Vector_SOA* restrict v_velocities, double* restrict temp, double* 
                + v_velocities->z[i] * v_velocities->z[i];
     }
 
-    sumvx /= (double)N;
-    sumvy /= (double)N;
-    sumvz /= (double)N;
+    sumvx /= (float)N;
+    sumvy /= (float)N;
+    sumvz /= (float)N;
 
     *temp = sumv2 / (3.0 * N);
     *ekin = 0.5 * sumv2;
@@ -73,17 +73,17 @@ void init_vel(Vector_SOA* restrict v_velocities, double* restrict temp, double* 
     }
 }
 
-inline static double minimum_image(double cordi, const double cell_length)
+inline static float minimum_image(float cordi, const float cell_length)
 {
-    const double half_cell_length = 0.5 * cell_length;
+    const float half_cell_length = 0.5 * cell_length;
     cordi -= cell_length * (cordi > half_cell_length);
     cordi += cell_length * (cordi <= -half_cell_length);
     return cordi;
 }
 
 
-void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, double* restrict epot, double* restrict pres,
-            const double* restrict temp, const double rho, const double V, const double L)
+void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, float* restrict epot, float* restrict pres,
+            const float* restrict temp, const float rho, const float V, const float L)
 {
     // calcula las fuerzas LJ (12-6)
     for (int i = 0; i < N; i++) {
@@ -91,37 +91,37 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, dou
         v_forces->y[i] = 0.0;
         v_forces->z[i] = 0.0;
     }
-    double pres_vir = 0.0;
-    double rcut2 = RCUT * RCUT;
+    float pres_vir = 0.0;
+    float rcut2 = RCUT * RCUT;
     *epot = 0.0;
 
     for (int i = 0; i < N - 1; i++) {
 
-        double xi = v_positions->x[i];
-        double yi = v_positions->y[i];
-        double zi = v_positions->z[i];
+        float xi = v_positions->x[i];
+        float yi = v_positions->y[i];
+        float zi = v_positions->z[i];
 
         for (int j = i + 1; j < N; j++) {
 
-            double xj = v_positions->x[j];
-            double yj = v_positions->y[j];
-            double zj = v_positions->z[j];
+            float xj = v_positions->x[j];
+            float yj = v_positions->y[j];
+            float zj = v_positions->z[j];
 
             // distancia mínima entre r_i y r_j
-            double rx = xi - xj;
+            float rx = xi - xj;
             rx = minimum_image(rx, L);
-            double ry = yi - yj;
+            float ry = yi - yj;
             ry = minimum_image(ry, L);
-            double rz = zi - zj;
+            float rz = zi - zj;
             rz = minimum_image(rz, L);        
 
-            double rij2 = rx * rx + ry * ry + rz * rz;
+            float rij2 = rx * rx + ry * ry + rz * rz;
 
-            double condition = (rij2 <= rcut2) ? 1.0 : 0.0;
-            double r2inv = condition * (1.0 / rij2);
-            double r6inv = condition * r2inv * r2inv * r2inv;
+            float condition = (rij2 <= rcut2) ? 1.0 : 0.0;
+            float r2inv = condition * (1.0 / rij2);
+            float r6inv = condition * r2inv * r2inv * r2inv;
 
-            double fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
+            float fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
 
             v_forces->x[i] += condition * fr * rx;
             v_forces->y[i] += condition * fr * ry;
@@ -141,7 +141,7 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, dou
 }
 
 
-inline static double pbc(double cordi, const double cell_length)
+inline static float pbc(float cordi, const float cell_length)
 {
     cordi += cell_length * (cordi <= 0);
     cordi -= cell_length * (cordi > cell_length && cordi > 0);
@@ -150,9 +150,9 @@ inline static double pbc(double cordi, const double cell_length)
 
 
 
-void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_velocities, Vector_SOA* restrict v_forces, double* restrict epot,
-                     double* restrict ekin, double* restrict pres, double* restrict temp, const double rho,
-                     const double V, const double L)
+void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_velocities, Vector_SOA* restrict v_forces, float* restrict epot,
+                     float* restrict ekin, float* restrict pres, float* restrict temp, const float rho,
+                     const float V, const float L)
 {
 
     for (int i = 0; i < N; i++) { // actualizo posiciones
@@ -171,7 +171,7 @@ void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_ve
 
     forces(v_positions, v_forces, epot, pres, temp, rho, V, L); // actualizo fuerzas
 
-    double sumv2 = 0.0;
+    float sumv2 = 0.0;
     for (int i = 0; i < N; i++) { // actualizo velocidades
         v_velocities->x[i] += 0.5 * v_forces->x[i] * DT;
         v_velocities->y[i] += 0.5 * v_forces->y[i] * DT;

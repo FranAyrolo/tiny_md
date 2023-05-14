@@ -8,9 +8,9 @@
 #include <stdlib.h>
 
 // variables globales
-static double Ekin, Epot, Temp, Pres; // variables macroscopicas
-static double Rho, V, box_size, tail, Etail, Ptail;
-static double Rhob, sf, epotm, presm;
+static float Ekin, Epot, Temp, Pres; // variables macroscopicas
+static float Rho, V, box_size, tail, Etail, Ptail;
+static float Rhob, sf, epotm, presm;
 static int switcher = 0, frames = 0, mes;
 static Vector_SOA* v_positions;
 static Vector_SOA* v_velocities;
@@ -27,7 +27,7 @@ static void pre_display(void)
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(45.0, (double)win_x / win_y, 1.0, 0.0);
+    gluPerspective(45.0, (float)win_x / win_y, 1.0, 0.0);
     gluLookAt(1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.0, 0.0);
 
     glMatrixMode(GL_MODELVIEW);
@@ -46,14 +46,14 @@ static void post_display(void)
 
 static void draw_atoms(void)
 {
-    double glL = cbrt((double)N / (RHOI - 0.8));
+    float glL = cbrt((float)N / (RHOI - 0.8));
 
-    double resize = 0.5;
+    float resize = 0.5;
 
     // grafico las lineas que delimitan la caja de simulación
     glBegin(GL_LINES);
 
-    double box_line = resize * (box_size / glL);
+    float box_line = resize * (box_size / glL);
     glColor3d(0.0, 0.0, 1.0);
 
     glVertex3d(0.0, 0.0, 0.0);
@@ -101,9 +101,9 @@ static void draw_atoms(void)
 
     int di;
 
-    double dx;
-    double dy;
-    double dz;
+    float dx;
+    float dy;
+    float dz;
 
     for (di = 0; di < N; di++) {
         dx = (v_positions->x[di] / glL) * resize;
@@ -134,10 +134,10 @@ static void idle_func(void)
     if (switcher == 3) {
 
         Rho = RHOI;
-        V = (double)N / Rho;
+        V = (float)N / Rho;
         box_size = cbrt(V);
         tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-        Etail = tail * (double)N;
+        Etail = tail * (float)N;
         Ptail = tail * Rho;
 
         init_pos(v_positions, Rho);
@@ -148,17 +148,17 @@ static void idle_func(void)
 
     } else if (switcher == 2) { // imprimo propiedades en la terminal y cambio la densidad
 
-        printf("%f\t%f\t%f\t%f\n", Rho, V, epotm / (double)mes,
-               presm / (double)mes);
+        printf("%f\t%f\t%f\t%f\n", Rho, V, epotm / (float)mes,
+               presm / (float)mes);
 
         Rhob = Rho;
         Rho = Rho - 0.1;
 
 
-        V = (double)N / Rho;
+        V = (float)N / Rho;
         box_size = cbrt(V);
         tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-        Etail = tail * (double)N;
+        Etail = tail * (float)N;
         Ptail = tail * Rho;
 
         sf = cbrt(Rhob / Rho);
@@ -280,10 +280,10 @@ int main(int argc, char** argv)
     srand(SEED);
     Rho = RHOI;
     Rhob = Rho;
-    V = (double)N / Rho;
+    V = (float)N / Rho;
     box_size = cbrt(V);
     tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-    Etail = tail * (double)N;
+    Etail = tail * (float)N;
     Ptail = tail * Rho;
 
     init_pos(v_positions, Rho);
