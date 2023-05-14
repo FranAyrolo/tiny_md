@@ -4,7 +4,6 @@
 #include <math.h>
 #include <stdlib.h> // rand()
 
-
 #define ECUT (4.0 * (pow(RCUT, -12) - pow(RCUT, -6)))
 
 void init_pos(Vector_SOA* restrict v_positions, const double rho)
@@ -38,6 +37,7 @@ void init_pos(Vector_SOA* restrict v_positions, const double rho)
         idx += 4;
     }
 }
+
 
 void init_vel(Vector_SOA* restrict v_velocities, double* restrict temp, double* restrict ekin)
 {
