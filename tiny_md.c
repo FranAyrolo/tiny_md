@@ -13,8 +13,8 @@ int main()
     FILE *file_xyz, *file_thermo;
     file_xyz = fopen("trajectory.xyz", "w");
     file_thermo = fopen("thermo.log", "w");
-    float Ekin, Epot, Temp, Pres; // variables macroscopicas
-    float Rho, cell_V, cell_L, tail, Etail, Ptail;
+    double Ekin, Epot, Temp, Pres; // variables macroscopicas
+    double Rho, cell_V, cell_L, tail, Etail, Ptail;
 
     Vector_SOA* v_positions = (Vector_SOA*)malloc(sizeof(Vector_SOA));
     Vector_SOA* v_velocities = (Vector_SOA*)malloc(sizeof(Vector_SOA));
@@ -29,18 +29,18 @@ int main()
     fprintf(file_thermo, "# t Temp Pres Epot Etot\n");
 
     srand(SEED);
-    float t = 0.0, sf;
-    float Rhob;
+    double t = 0.0, sf;
+    double Rhob;
     Rho = RHOI;
     init_pos(v_positions, Rho);
     double start = wtime();
     for (int m = 0; m < 9; m++) {
         Rhob = Rho;
-        Rho = RHOI - 0.1 * (float)m;
-        cell_V = (float)N / Rho;
+        Rho = RHOI - 0.1 * (double)m;
+        cell_V = (double)N / Rho;
         cell_L = cbrt(cell_V);
         tail = 16.0 * M_PI * Rho * ((2.0 / 3.0) * pow(RCUT, -9) - pow(RCUT, -3)) / 3.0;
-        Etail = tail * (float)N;
+        Etail = tail * (double)N;
         Ptail = tail * Rho;
 
         int i = 0;
@@ -68,7 +68,7 @@ int main()
         }
 
         int mes = 0;
-        float epotm = 0.0, presm = 0.0;
+        double epotm = 0.0, presm = 0.0;
         for (i = TEQ; i < TRUN; i++) { // loop de medicion
 
             velocity_verlet(v_positions, v_velocities, v_forces, &Epot, &Ekin, &Pres, &Temp, Rho, cell_V, cell_L);
@@ -98,7 +98,7 @@ int main()
 
             t += DT;
         }
-        printf("%f\t%f\t%f\t%f\n", Rho, cell_V, epotm / (float)mes, presm / (float)mes);
+        printf("%f\t%f\t%f\t%f\n", Rho, cell_V, epotm / (double)mes, presm / (double)mes);
     }
 
     double elapsed = wtime() - start;
