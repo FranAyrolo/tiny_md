@@ -1,5 +1,5 @@
 CC      = gcc
-CFLAGS  = -Ofast -march=native -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
+CFLAGS  = -Ofast -mavx2 -march=native -ftree-loop-vectorize -ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
 WFLAGS  = -std=c11 -Wall -Wextra -Werror
 LDFLAGS = -lm
 

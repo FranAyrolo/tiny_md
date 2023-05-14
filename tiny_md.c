@@ -17,21 +17,8 @@ int main()
     float Rho, cell_V, cell_L, tail, Etail, Ptail;
 
     Vector_SOA* v_positions = (Vector_SOA*)malloc(sizeof(Vector_SOA));
-    /*v_positions->x = (float*)malloc(N * sizeof(float));
-    v_positions->y = (float*)malloc(N * sizeof(float));
-    v_positions->z = (float*)malloc(N * sizeof(float));
-    v_positions->w = (float*)malloc(N * sizeof(float));*/
     Vector_SOA* v_velocities = (Vector_SOA*)malloc(sizeof(Vector_SOA));
-    /*v_velocities->x = (float*)malloc(N * sizeof(float));
-    v_velocities->y = (float*)malloc(N * sizeof(float));
-    v_velocities->z = (float*)malloc(N * sizeof(float));
-    v_velocities->w = (float*)malloc(N * sizeof(float));*/
-    Vector_SOA* v_forces = (Vector_SOA*)malloc(sizeof(Vector_SOA));
-    /*v_forces->x = (float*)malloc(N * sizeof(float));
-    v_forces->y = (float*)malloc(N * sizeof(float));
-    v_forces->z = (float*)malloc(N * sizeof(float));
-    v_forces->w = (float*)malloc(N * sizeof(float));*/
-    
+    Vector_SOA* v_forces = (Vector_SOA*)malloc(sizeof(Vector_SOA)); 
 
     printf("# Número de partículas:      %d\n", N);
     printf("# Temperatura de referencia: %.2f\n", T0);
