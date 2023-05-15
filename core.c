@@ -38,54 +38,65 @@ void init_pos(Vector_SOA* restrict v_positions, const float rho)
     }
 }
 
-/*
-static uint32_t s[4];
+// Arreglo para el algoritmo de Xoshiro
+static uint32_t s[8];
 
 static void xoshiro_seed(uint32_t seed) {
     s[0] = seed;
     s[1] = seed + 1;
     s[2] = seed + 2;
     s[3] = seed + 3;
+    s[4] = seed + 4;
+    s[5] = seed + 5;
+    s[6] = seed + 6;
+    s[7] = seed + 7;
 }
 
-static __m128i xoshiro_next() {
-    const __m128i s0 = _mm_set_epi32(s[3], s[2], s[1], s[0]);
+// Genera flotantes entre -0.5 y 0.5 en batchs
+static __m256 xoshiro_next() {
+    const __m256i s0 = _mm256_set_epi32(s[7], s[6], s[5], s[4], s[3], s[2], s[1], s[0]);
 
-    const __m128i s1 = _mm_xor_si128(s0, _mm_slli_epi32(s0, 5));
-    const __m128i s2 = _mm_xor_si128(s1, _mm_slli_epi32(s1, 15));
-    const __m128i s3 = _mm_xor_si128(s2, _mm_slli_epi32(s2, 27));
+    const __m256i s1 = _mm256_xor_si256(s0, _mm256_slli_epi32(s0, 5));
+    const __m256i s2 = _mm256_xor_si256(s1, _mm256_slli_epi32(s1, 15));
+    const __m256i s3 = _mm256_xor_si256(s2, _mm256_slli_epi32(s2, 27));
 
-    const __m128i result = _mm_add_epi32(s0, s3);
+    const __m256i result = _mm256_add_epi32(s0, s3);
 
-    // Update the state
-    s[0] = _mm_extract_epi32(s1, 3);
-    s[1] = _mm_extract_epi32(s2, 3);
-    s[2] = _mm_extract_epi32(s3, 3);
-    s[3] = _mm_extract_epi32(result, 3);
+    // Actualizamos el estado
+    s[0] = _mm256_extract_epi32(s1, 7);
+    s[1] = _mm256_extract_epi32(s2, 7);
+    s[2] = _mm256_extract_epi32(s3, 7);
+    s[3] = _mm256_extract_epi32(result, 7);
+    s[4] = _mm256_extract_epi32(s1, 6);
+    s[5] = _mm256_extract_epi32(s2, 6);
+    s[6] = _mm256_extract_epi32(s3, 6);
+    s[7] = _mm256_extract_epi32(result, 6);
 
-    return result;
+    const __m256 scale = _mm256_set1_ps(1.0f / (float)UINT32_MAX);
+    const __m256 scaled_result = _mm256_mul_ps(_mm256_cvtepi32_ps(result), scale);
+    const __m256 scaled_minus_half = _mm256_set1_ps(-0.5f);
+    const __m256 final_result = _mm256_add_ps(scaled_result, scaled_minus_half);
+
+    return final_result;
 }
 
-static void generate_random_numbers(int* array, size_t len) {
-    const size_t num_iterations = len / 4;
+static void generate_random_floats(float* array, size_t len) {
+    const size_t num_iterations = len / 8;
     for(size_t i = 0; i < num_iterations; i++) {
-        __m128i random = xoshiro_next();
-        __m128i scaled_random = _mm_cvtps_epi32(_mm_mul_ps(_mm_cvtepi32_ps(random), _mm_set1_ps(RAND_MAX)));
-        _mm_storeu_si128((__m128i*)(array + 4 * i), scaled_random);
+        __m256 random = xoshiro_next();
+        _mm256_storeu_ps(array + 8 * i, random);
     }
 
-    // If len is not divisible by 4, generate the remaining random numbers
-    const size_t remaining = len % 4;
+    // Si len no es divisible por 8, generamos los restantes numeros aleatorios
+    const size_t remaining = len % 8;
     if(remaining > 0) {
-        __m128i random = xoshiro_next();
-        __m128i scaled_random = _mm_cvtps_epi32(_mm_mul_ps(_mm_cvtepi32_ps(random), _mm_set1_ps(RAND_MAX)));
-        int* last_values = (int*)&scaled_random;
+        __m256 random = xoshiro_next();
+        float* last_values = (float*)&random;
         for(size_t i = 0; i < remaining; i++) {
             array[len - remaining + i] = last_values[i];
         }
     }
 }
-*/
 
 
 void init_vel(Vector_SOA* restrict v_velocities, float* restrict temp, float* restrict ekin)
@@ -94,16 +105,16 @@ void init_vel(Vector_SOA* restrict v_velocities, float* restrict temp, float* re
 
     float sf, sumvx = 0.0, sumvy = 0.0, sumvz = 0.0, sumv2 = 0.0;
 
-    // int random_array[3*N];
-    // xoshiro_seed(1234);
-    //generate_random_numbers(random_array, 3*N);
-    //int k = 0;
+    float random_array[3*N];
+
+    xoshiro_seed(SEED);
+    generate_random_floats(random_array, 3*N);
+    int k = 0;
 
     for (int i = 0; i < N; i++) {
-        v_velocities->x[i] = rand() / (float)RAND_MAX - 0.5;
-        v_velocities->y[i] = rand() / (float)RAND_MAX - 0.5;
-        v_velocities->z[i] = rand() / (float)RAND_MAX - 0.5;
-        //k += 3;
+        v_velocities->x[i] = random_array[k++];
+        v_velocities->y[i] = random_array[k++];
+        v_velocities->z[i] = random_array[k++];
 
         sumvx += v_velocities->x[i];
         sumvy += v_velocities->y[i];

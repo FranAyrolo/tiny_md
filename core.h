@@ -4,7 +4,7 @@
 #include "parameters.h"
 #include <immintrin.h>
 #include <stdint.h> // uint32_t
-#include <stdlib.h> // rand(), RAND_MAX
+//#include <stdlib.h> // rand(), RAND_MAX
 
 typedef struct {
     float x[N];

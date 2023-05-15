@@ -28,7 +28,6 @@ int main()
     printf("# densidad, volumen, energía potencial media, presión media\n");
     fprintf(file_thermo, "# t Temp Pres Epot Etot\n");
 
-    srand(SEED);
     float t = 0.0, sf;
     float Rhob;
     Rho = RHOI;
@@ -106,5 +105,10 @@ int main()
     printf("# Tiempo simulado = %f [fs]\n", t * 1.6);
     printf("# ns/day = %f\n", (1.6e-6 * t) / elapsed * 86400);
     //                       ^1.6 fs -> ns       ^sec -> day
+    fclose(file_xyz);
+    fclose(file_thermo);
+    free(v_positions);
+    free(v_velocities);
+    free(v_forces);
     return 0;
 }
