@@ -5,11 +5,9 @@
 # Initialize variables
 num_iterations=10
 temp_file="resultados/temp.log"
-output_file="resultados/gcc_core_avx2_N256.log"
+output_file="resultados/atom_gcc_N256_avx2_soa.log"
 # Output CSV file
-csv_file="resultados/gcc_core_avx2_N256.csv"
-
-echo "N = 256 / TRUN = 2000" >> $output_file
+csv_file="resultados/atom_gcc_N256_avx2_soa.csv"
 
 # Loop over the command
 for((i=1; i <= num_iterations; i++)); do
@@ -35,7 +33,7 @@ do
     fi
 
     # Extract number of instructions and ins per cycle
-    if [[ $line =~ instructions:u ]]; then
+    if [[ $line =~ instructions ]]; then
         instructions=$(echo $line | awk '{print $1}' | tr -d ',')
         ins_per_cycle=$(echo $line | awk '{print $4}')
     fi
@@ -48,9 +46,11 @@ do
     # Extract secons time elapsed
     if [[ $line =~ ([0-9]+\.[0-9]+)\ seconds\ time\ elapsed ]]; then
         time_elapsed=${BASH_REMATCH[1]}
-
+        
         # Write data to CSV file
         echo "$iteration,$instructions,$ins_per_cycle,$misses,$time_elapsed" >> "$csv_file"
     fi
+    
 done < $output_file
 
+rm $output_file
