@@ -79,13 +79,9 @@ void init_vel(Vector3D* velocities, double* temp, double* ekin)
 
 static double minimum_image(double cordi, const double cell_length)
 {
-    // imagen más cercana
-
-    if (cordi <= -0.5 * cell_length) {
-        cordi += cell_length;
-    } else if (cordi > 0.5 * cell_length) {
-        cordi -= cell_length;
-    }
+    const float half_cell_length = 0.5 * cell_length;
+    cordi -= cell_length * (cordi > half_cell_length);
+    cordi += cell_length * (cordi <= -half_cell_length);
     return cordi;
 }
 
@@ -158,11 +154,8 @@ void forces(const Vector3D* positions, Vector3D* forces3D, double* epot, double*
 static double pbc(double cordi, const double cell_length)
 {
     // condiciones periodicas de contorno coordenadas entre [0,L)
-    if (cordi <= 0) {
-        cordi += cell_length;
-    } else if (cordi > cell_length) {
-        cordi -= cell_length;
-    }
+    cordi += cell_length * (cordi <= 0);
+    cordi -= cell_length * (cordi > cell_length && cordi > 0);
     return cordi;
 }
 
