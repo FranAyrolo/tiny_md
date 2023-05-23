@@ -4,6 +4,7 @@
 #include "parameters.h"
 #include <immintrin.h>
 #include <stdint.h> // uint32_t
+#include <omp.h>
 //#include <stdlib.h> // rand(), RAND_MAX
 
 typedef struct {
