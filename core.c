@@ -104,14 +104,15 @@ void init_vel(Vector_SOA* restrict v_velocities, float* restrict temp, float* re
     // inicialización de velocidades aleatorias
 
     float sf, sumvx = 0.0, sumvy = 0.0, sumvz = 0.0, sumv2 = 0.0;
-    float random_array[8];
+    float random_array[N*3];
+    xoshiro_seed(SEED);
+    generate_random_floats(random_array, 3*N);
+    int k = 0;
 
     for (int i = 0; i < N; i++) {
-        xoshiro_seed(SEED);
-        generate_random_floats(random_array, 8);
-        v_velocities->x[i] = random_array[1];
-        v_velocities->y[i] = random_array[2];
-        v_velocities->z[i] = random_array[3];
+        v_velocities->x[i] = random_array[k++];
+        v_velocities->y[i] = random_array[k++];
+        v_velocities->z[i] = random_array[k++];
 
         sumvx += v_velocities->x[i];
         sumvy += v_velocities->y[i];
