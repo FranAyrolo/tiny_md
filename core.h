@@ -4,7 +4,6 @@
 #include "parameters.h"
 #include <immintrin.h>
 #include <stdint.h> // uint32_t
-#include <omp.h>
 //#include <stdlib.h> // rand(), RAND_MAX
 
 typedef struct {
@@ -15,8 +14,9 @@ typedef struct {
 
 void init_pos(Vector_SOA* v_positions, const float rho);
 void init_vel(Vector_SOA* v_velocities, float* temp, float* ekin);
-void forces(Vector_SOA* v_positions, Vector_SOA* v_forces, float* epot, float* pres,
-            const float* temp, const float rho, const float V, const float L);
+void forces(float* restrict pos_x, float* restrict pos_y, float* restrict pos_z, 
+            float* restrict forces_x, float* restrict forces_y, float* restrict forces_z, 
+            float* epot, float* pres, const float* temp, const float rho, const float V, const float L);
 void velocity_verlet(Vector_SOA* v_positions, Vector_SOA* v_velocities, Vector_SOA* v_forces, float* epot,
                      float* ekin, float* pres, float* temp, const float rho,
                      const float V, const float L);

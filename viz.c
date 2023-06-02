@@ -142,7 +142,8 @@ static void idle_func(void)
 
         init_pos(v_positions, Rho);
         init_vel(v_velocities, &Temp, &Ekin);
-        forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, V, box_size);
+        forces(v_positions->x, v_positions->y, v_positions->z, v_forces->x, v_forces->y, v_forces->z,
+                &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
 
@@ -168,7 +169,8 @@ static void idle_func(void)
             v_positions->z[k] *= sf;
         }
         init_vel(v_velocities, &Temp, &Ekin);
-        forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, V, box_size);
+        forces(v_positions->x, v_positions->y, v_positions->z, v_forces->x, v_forces->y, v_forces->z,
+                &Epot, &Pres, &Temp, Rho, V, box_size);
 
         switcher = 0;
         if (fabs(Rho - (RHOI - 0.9f)) < 1e-6) {
@@ -288,7 +290,8 @@ int main(int argc, char** argv)
 
     init_pos(v_positions, Rho);
     init_vel(v_velocities, &Temp, &Ekin);
-    forces(v_positions, v_forces, &Epot, &Pres, &Temp, Rho, V, box_size);
+    forces(v_positions->x, v_positions->y, v_positions->z, v_forces->x, v_forces->y, v_forces->z,
+            &Epot, &Pres, &Temp, Rho, V, box_size);
     //
     //
 

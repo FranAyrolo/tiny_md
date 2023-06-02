@@ -146,8 +146,12 @@ inline static float minimum_image(float cordi, const float cell_length)
 }
 
 
-void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, float* restrict epot, float* restrict pres,
-            const float* restrict temp, const float rho, const float V, const float L)
+//void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, float* restrict epot, float* restrict pres,
+//            const float* restrict temp, const float rho, const float V, const float L)
+/*
+void forces(float* pos_x, float* pos_y, float* pos_z, 
+            float* forces_x, float* forces_y, float* forces_z, 
+            float* epot, float* pres, const float* temp, const float rho, const float V, const float L)
 {
     // calcula las fuerzas LJ (12-6)
     float pres_vir = 0.0;
@@ -155,9 +159,9 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
     *epot = 0.0;
     
     for (int i = 0; i < N; i++) {
-        v_forces->x[i] = 0.0;
-        v_forces->y[i] = 0.0;
-        v_forces->z[i] = 0.0;
+        forces_x[i] = 0.0;
+        forces_y[i] = 0.0;
+        forces_z[i] = 0.0;
     }
     
     float temp_epot = *epot;
@@ -166,17 +170,17 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
     //#pragma omp parallel for num_threads(8) 
     for (int i = 0; i < N - 1; i++) {
 
-        float xi = v_positions->x[i];
-        float yi = v_positions->y[i];
-        float zi = v_positions->z[i];
+        float xi = pos_x[i];
+        float yi = pos_y[i];
+        float zi = pos_z[i];
 
         int j = 0;
         //#pragma omp parallel for private(i, j) default(shared) reduction(+:temp_epot) reduction(+:temp_pres_vir) num_threads(8)
         for (j = i + 1; j < N; j++) {
 
-            float xj = v_positions->x[j];
-            float yj = v_positions->y[j];
-            float zj = v_positions->z[j];
+            float xj = pos_x[j];
+            float yj = pos_y[j];
+            float zj = pos_z[j];
 
             // distancia mínima entre r_i y r_j
             float rx = minimum_image(xi - xj, L);
@@ -191,13 +195,13 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
 
             float fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
 
-            v_forces->x[i] += condition * fr * rx;
-            v_forces->y[i] += condition * fr * ry;
-            v_forces->z[i] += condition * fr * rz;
+            forces_x[i] += condition * fr * rx;
+            forces_y[i] += condition * fr * ry;
+            forces_z[i] += condition * fr * rz;
 
-            v_forces->x[j] -= condition * fr * rx;
-            v_forces->y[j] -= condition * fr * ry;
-            v_forces->z[j] -= condition * fr * rz;
+            forces_x[j] -= condition * fr * rx;
+            forces_y[j] -= condition * fr * ry;
+            forces_z[j] -= condition * fr * rz;
 
             temp_epot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
             temp_pres_vir += condition * fr * rij2;
@@ -206,6 +210,62 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
         pres_vir += temp_pres_vir;
     }
 
+    pres_vir /= (V * 3.0);
+    *pres = *temp * rho + pres_vir;
+}
+*/
+void forces(float* restrict pos_x, float* restrict pos_y, float* restrict pos_z, 
+            float* restrict forces_x, float* restrict forces_y, float* restrict forces_z, 
+            float* epot, float* pres, const float* temp, const float rho, const float V, const float L)
+{
+    // calcula las fuerzas LJ (12-6)
+    for (int i = 0; i < N; i++) {
+        forces_x[i] = 0.0;
+        forces_y[i] = 0.0;
+        forces_z[i] = 0.0;
+    }
+    
+    float pres_vir = 0.0;
+    float rcut2 = RCUT * RCUT;
+    *epot = 0.0;
+    float temp_epot = *epot;
+    
+        #pragma omp parallel for reduction(+:temp_epot) reduction(+:pres_vir)
+    for (int k = 0; k < N * (N - 1) / 2; k++) {
+        int j = (int)((sqrt(8 * k + 1) + 1) / 2);
+        int i = k - j * (j - 1) / 2;
+        
+        float xi = pos_x[i];
+        float yi = pos_y[i];
+        float zi = pos_z[i];
+        
+        float xj = pos_x[j];
+        float yj = pos_y[j];
+        float zj = pos_z[j];
+        
+        // distancia mínima entre r_i y r_j
+        float rx = minimum_image(xi - xj, L);
+        float ry = minimum_image(yi - yj, L);
+        float rz = minimum_image(zi - zj, L);        
+        float rij2 = rx * rx + ry * ry + rz * rz;
+        float condition = (rij2 <= rcut2) ? 1.0 : 0.0;
+        float r2inv = condition * (1.0 / rij2);
+        float r6inv = condition * r2inv * r2inv * r2inv;
+        float fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
+        
+        forces_x[i] += condition * fr * rx;
+        forces_y[i] += condition * fr * ry;
+        forces_z[i] += condition * fr * rz;
+
+        forces_x[j] -= condition * fr * rx;
+        forces_y[j] -= condition * fr * ry;
+        forces_z[j] -= condition * fr * rz;
+
+        temp_epot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
+        pres_vir += condition * fr * rij2;
+    }
+    
+    *epot += temp_epot;
     pres_vir /= (V * 3.0);
     *pres = *temp * rho + pres_vir;
 }
@@ -219,10 +279,9 @@ inline static float pbc(float cordi, const float cell_length)
 }
 
 
-
-void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_velocities, Vector_SOA* restrict v_forces, float* restrict epot,
-                     float* restrict ekin, float* restrict pres, float* restrict temp, const float rho,
-                     const float V, const float L)
+void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_velocities, 
+                        Vector_SOA* restrict v_forces, float* restrict epot, float* restrict ekin, 
+                        float* restrict pres, float* restrict temp, const float rho, const float V, const float L)
 {
 
     for (int i = 0; i < N; i++) { // actualizo posiciones
@@ -239,7 +298,8 @@ void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_ve
         v_velocities->z[i] += 0.5 * v_forces->z[i] * DT;
     }
 
-    forces(v_positions, v_forces, epot, pres, temp, rho, V, L); // actualizo fuerzas
+    forces(v_positions->x, v_positions->y, v_positions->z, v_forces->x, v_forces->y, v_forces->z, 
+            epot, pres, temp, rho, V, L); // actualizo fuerzas
 
     float sumv2 = 0.0;
     for (int i = 0; i < N; i++) { // actualizo velocidades

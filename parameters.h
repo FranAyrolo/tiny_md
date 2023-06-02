@@ -12,7 +12,7 @@
 
 // Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912
 #ifndef N
-#define N 6912
+#define N 256
 #endif
 
 #ifndef SEED // rand SEED para las velocidades
