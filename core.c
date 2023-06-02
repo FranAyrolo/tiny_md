@@ -150,34 +150,38 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
             const float* restrict temp, const float rho, const float V, const float L)
 {
     // calcula las fuerzas LJ (12-6)
+    float pres_vir = 0.0;
+    float rcut2 = RCUT * RCUT;
+    *epot = 0.0;
+    
     for (int i = 0; i < N; i++) {
         v_forces->x[i] = 0.0;
         v_forces->y[i] = 0.0;
         v_forces->z[i] = 0.0;
     }
-    float pres_vir = 0.0;
-    float rcut2 = RCUT * RCUT;
-    *epot = 0.0;
+    
+    float temp_epot = *epot;
+    float temp_pres_vir = pres_vir;
 
+    //#pragma omp parallel for num_threads(8) 
     for (int i = 0; i < N - 1; i++) {
 
         float xi = v_positions->x[i];
         float yi = v_positions->y[i];
         float zi = v_positions->z[i];
 
-        for (int j = i + 1; j < N; j++) {
+        int j = 0;
+        //#pragma omp parallel for private(i, j) default(shared) reduction(+:temp_epot) reduction(+:temp_pres_vir) num_threads(8)
+        for (j = i + 1; j < N; j++) {
 
             float xj = v_positions->x[j];
             float yj = v_positions->y[j];
             float zj = v_positions->z[j];
 
             // distancia mínima entre r_i y r_j
-            float rx = xi - xj;
-            rx = minimum_image(rx, L);
-            float ry = yi - yj;
-            ry = minimum_image(ry, L);
-            float rz = zi - zj;
-            rz = minimum_image(rz, L);        
+            float rx = minimum_image(xi - xj, L);
+            float ry = minimum_image(yi - yj, L);
+            float rz = minimum_image(zi - zj, L);        
 
             float rij2 = rx * rx + ry * ry + rz * rz;
 
@@ -195,9 +199,11 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
             v_forces->y[j] -= condition * fr * ry;
             v_forces->z[j] -= condition * fr * rz;
 
-            *epot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
-            pres_vir += condition * fr * rij2;
+            temp_epot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
+            temp_pres_vir += condition * fr * rij2;
         }
+        *epot += temp_epot;
+        pres_vir += temp_pres_vir;
     }
 
     pres_vir /= (V * 3.0);
