@@ -5,22 +5,26 @@
 # Initialize variables
 num_iterations=5
 temp_file="resultados/temp.log"
-output_file="resultados/multicore_N1372.log"
+output_file="resultados/zx81.log"
 # Output CSV file
-csv_file="resultados/multicore_N1372.csv"
+csv_file="resultados/zx81.csv"
 
-numThreads=(1 2 4 8)
+numThreads=(1 2 4 8 16)
+
+enes=(256 500 864 1372 2048 2916 4000 5324 6912)
 
 # Loop over the command
-for threads in "${numThreads[@]}"; do
-    export OMP_NUM_THREADS=$threads
-    make clean >> /dev/null
-    make >> /dev/null
-    for((i=1; i <= num_iterations; i++)); do
-        echo "Num. Threads = $threads - Iteration $i"
-        echo "Num. Threads $threads - Iteration $i" >> $output_file
-        perf stat -o $temp_file ./tiny_md
-        cat $temp_file >> $output_file
+for n in "${enes[@]}"; do
+    make clean
+    make CPPFLAGS="-DN=$n"
+    for threads in "${numThreads[@]}"; do
+        export OMP_NUM_THREADS=$threads 
+        for((i=1; i <= num_iterations; i++)); do
+            echo "N= $n Num. Threads $threads - Iteration $i"
+            echo "N= $n Num. Threads $threads - Iteration $i" >> $output_file
+            perf stat -o $temp_file ./tiny_md
+            cat $temp_file >> $output_file
+        done
     done
 done
 
@@ -29,13 +33,22 @@ rm $temp_file
 
 
 # Write CSV header
-echo "Iteration number, Number of instructions, Ins per cycle, Percentage of misses, Seconds time elapsed" > "$csv_file"
+echo "N value, thread number, Iteration number, Number of instructions, Ins per cycle, Percentage of misses, Seconds time elapsed" > "$csv_file"
 
 # Extract data from text file
 while IFS= read -r line
 do
+    # Extract N value
+    if [[ $line =~ ^N=\ ([0-9]+) ]]; then
+        n_value=${BASH_REMATCH[1]}
+    fi
+    # Extract thread number
+    if [[ $line =~ Num.\ Threads\ ([0-9]+) ]]; then
+        thread_num=${BASH_REMATCH[1]}
+    fi
+
     # Extract iteration number
-    if [[ $line =~ ^Iteration\ ([0-9]+) ]]; then
+    if [[ $line =~ Iteration\ ([0-9]+) ]]; then
         iteration=${BASH_REMATCH[1]}
     fi
 
@@ -55,7 +68,7 @@ do
         time_elapsed=${BASH_REMATCH[1]}
         
         # Write data to CSV file
-        echo "$iteration,$instructions,$ins_per_cycle,$misses,$time_elapsed" >> "$csv_file"
+        echo "$n_value, $thread_num, $iteration,$instructions,$ins_per_cycle,$misses,$time_elapsed" >> "$csv_file"
     fi
     
 done < $output_file
