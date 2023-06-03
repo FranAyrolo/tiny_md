@@ -3,18 +3,25 @@
 # Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912
 
 # Initialize variables
-num_iterations=10
+num_iterations=5
 temp_file="resultados/temp.log"
-output_file="resultados/atom_gcc_N256_avx2_soa.log"
+output_file="resultados/multicore_N1372.log"
 # Output CSV file
-csv_file="resultados/atom_gcc_N256_avx2_soa.csv"
+csv_file="resultados/multicore_N1372.csv"
+
+numThreads=(1 2 4 8)
 
 # Loop over the command
-for((i=1; i <= num_iterations; i++)); do
-    echo "Iteration $i"
-    echo "Iteration $i" >> $output_file
-    perf stat -o $temp_file ./tiny_md
-    cat $temp_file >> $output_file
+for threads in "${numThreads[@]}"; do
+    export OMP_NUM_THREADS=$threads
+    make clean >> /dev/null
+    make >> /dev/null
+    for((i=1; i <= num_iterations; i++)); do
+        echo "Num. Threads = $threads - Iteration $i"
+        echo "Num. Threads $threads - Iteration $i" >> $output_file
+        perf stat -o $temp_file ./tiny_md
+        cat $temp_file >> $output_file
+    done
 done
 
 # Cleanup temporary file
@@ -52,5 +59,3 @@ do
     fi
     
 done < $output_file
-
-rm $output_file
