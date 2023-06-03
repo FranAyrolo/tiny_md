@@ -159,42 +159,40 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
     float rcut2 = RCUT * RCUT;
     *epot = 0.0;
 
-    int i = 0, j = 0;
-    float xi = 0.0, yi = 0.0, zi = 0.0;
-    float xj = 0.0, yj = 0.0, zj = 0.0;
-    float rx = 0.0, ry = 0.0, rz = 0.0;
-    float rij2 = 0.0, condition = 0.0, r6inv = 0.0, fr = 0.0;
-    float r2inv = 0.0;
-#pragma omp parallel for schedule(dynamic, 25) private(xi, yi, zi)  \
-    private(i, j) private(xj, yj, zj) private(rx, ry, rz) \
-    private(rij2, condition, r6inv, r2inv, fr) reduction(+:pres_vir, sumEpot)
-    for (i = 0; i < N - 1; i++) {
+    // int i = 0, j = 0;
+    // float xi = 0.0, yi = 0.0, zi = 0.0;
+    // float xj = 0.0, yj = 0.0, zj = 0.0;
+    // float rx = 0.0, ry = 0.0, rz = 0.0;
+    // float rij2 = 0.0, condition = 0.0, r6inv = 0.0, fr = 0.0;
+    //float r2inv = 0.0;
+#pragma omp parallel for reduction(+:sumEpot) reduction(+:pres_vir)
+    for (int i = 0; i < N - 1; i++) {
 
-        xi = v_positions->x[i];
-        yi = v_positions->y[i];
-        zi = v_positions->z[i];
+        float xi = v_positions->x[i];
+        float yi = v_positions->y[i];
+        float zi = v_positions->z[i];
 
-        for (j = i + 1; j < N; j++) {
+        for (int j = i + 1; j < N; j++) {
 
-            xj = v_positions->x[j];
-            yj = v_positions->y[j];
-            zj = v_positions->z[j];
+            float xj = v_positions->x[j];
+            float yj = v_positions->y[j];
+            float zj = v_positions->z[j];
 
             // distancia mínima entre r_i y r_j
-            rx = xi - xj;
+            float rx = xi - xj;
             rx = minimum_image(rx, L);
-            ry = yi - yj;
+            float ry = yi - yj;
             ry = minimum_image(ry, L);
-            rz = zi - zj;
+            float rz = zi - zj;
             rz = minimum_image(rz, L);        
 
-            rij2 = rx * rx + ry * ry + rz * rz;
+            float rij2 = rx * rx + ry * ry + rz * rz;
 
-            condition = (rij2 <= rcut2) ? 1.0 : 0.0;
-            r2inv = condition * (1.0 / rij2);
-            r6inv = condition * r2inv * r2inv * r2inv;
+            float condition = (rij2 <= rcut2) ? 1.0 : 0.0;
+            float r2inv = condition * (1.0 / rij2);
+            float r6inv = condition * r2inv * r2inv * r2inv;
 
-            fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
+            float fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
 
             v_forces->x[i] += condition * fr * rx;
             v_forces->y[i] += condition * fr * ry;
