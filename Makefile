@@ -1,6 +1,6 @@
 CC      = gcc-12
 CFLAGS  = -Ofast -march=core-avx2 -fopenmp -ftree-vectorize #-fopt-info-vec -fopt-info-vec-missed
-WFLAGS  = -std=c11 -Wall -Wextra -Werror -g
+WFLAGS  = -std=c11 -Wall -Wextra -Werror -g -pedantic
 LDFLAGS = -lm
 
 TARGETS = tiny_md viz

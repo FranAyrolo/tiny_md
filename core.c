@@ -230,11 +230,18 @@ void forces(float* restrict pos_x, float* restrict pos_y, float* restrict pos_z,
     *epot = 0.0;
     float temp_epot = *epot;
     
-    #pragma omp parallel reduction(+:temp_epot, pres_vir) \
+    int i, j, k;
+    float priv_forces_x[N] = {0.0}, priv_forces_y[N] = {0.0}, priv_forces_z[N] = {0.0};
+    
+    #pragma omp parallel default(private) reduction(+:temp_epot, pres_vir) \
+    firstprivate(priv_forces_x, priv_forces_y, priv_forces_z, L, rcut2) private(i, j, k) \
+    shared(pos_x, pos_y, pos_z, forces_x, forces_y, forces_z)
+    {
     //reduction(+:forces_x) reduction(+:forces_y) reduction(+:forces_z) 
-    for (int k = 0; k < N * (N - 1) / 2; k++) {
-        int j = (int)((sqrt(8 * k + 1) + 1) / 2);
-        int i = k - j * (j - 1) / 2;
+    #pragma omp for nowait
+    for (k = 0; k < N * (N - 1) / 2; k++) {
+        j = (int)((sqrt(8 * k + 1) + 1) / 2);
+        i = k - j * (j - 1) / 2;
         
         float xi = pos_x[i];
         float yi = pos_y[i];
@@ -254,18 +261,25 @@ void forces(float* restrict pos_x, float* restrict pos_y, float* restrict pos_z,
         float r6inv = condition * r2inv * r2inv * r2inv;
         float fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
         
-        forces_x[i] += condition * fr * rx;
-        forces_y[i] += condition * fr * ry;
-        forces_z[i] += condition * fr * rz;
-
-        forces_x[j] -= condition * fr * rx;
-        forces_y[j] -= condition * fr * ry;
-        forces_z[j] -= condition * fr * rz;
+        priv_forces_x[i] += condition * fr * rx;
+        priv_forces_y[i] += condition * fr * ry;
+        priv_forces_z[i] += condition * fr * rz;
+        
+        priv_forces_x[j] -= condition * fr * rx;
+        priv_forces_y[j] -= condition * fr * ry;
+        priv_forces_z[j] -= condition * fr * rz;
 
         temp_epot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
         pres_vir += condition * fr * rij2;
     }
-    
+    for(i = 0; i < N; i++) {
+    //#pragma omp atomic
+        forces_x[i] += priv_forces_x[i];
+        forces_y[i] += priv_forces_y[i];
+        forces_z[i] += priv_forces_z[i];
+    }
+        
+    }
     *epot += temp_epot;
     pres_vir /= (V * 3.0);
     *pres = *temp * rho + pres_vir;
