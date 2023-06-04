@@ -230,7 +230,8 @@ void forces(float* restrict pos_x, float* restrict pos_y, float* restrict pos_z,
     *epot = 0.0;
     float temp_epot = *epot;
     
-        #pragma omp parallel for reduction(+:temp_epot) reduction(+:pres_vir)
+    #pragma omp parallel reduction(+:temp_epot, pres_vir) \
+    //reduction(+:forces_x) reduction(+:forces_y) reduction(+:forces_z) 
     for (int k = 0; k < N * (N - 1) / 2; k++) {
         int j = (int)((sqrt(8 * k + 1) + 1) / 2);
         int i = k - j * (j - 1) / 2;

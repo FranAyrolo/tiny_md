@@ -3,4 +3,4 @@ viz
 *.o
 .depend
 .vscode/
-
+resultados/

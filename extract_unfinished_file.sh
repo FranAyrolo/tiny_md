@@ -3,34 +3,9 @@
 # Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912
 
 # Initialize variables
-num_iterations=5
-temp_file="resultados/temp.log"
-output_file="resultados/intento_fran.log"
+input_file="resultados/intento_fran.log"
 # Output CSV file
-csv_file="resultados/intento_fran.csv"
-
-numThreads=(1 2 4 8 16)
-
-enes=(256 500 864 1372 2048 2916 4000 5324 6912 8788 10976)
-
-# Loop over the command
-for n in "${enes[@]}"; do
-    make clean
-    make CPPFLAGS="-DN=$n"
-    for threads in "${numThreads[@]}"; do
-        export OMP_NUM_THREADS=$threads 
-        for((i=1; i <= num_iterations; i++)); do
-            echo "N= $n Num. Threads $threads - Iteration $i"
-            echo "N= $n Num. Threads $threads - Iteration $i" >> $output_file
-            perf stat -o $temp_file ./tiny_md
-            cat $temp_file >> $output_file
-        done
-    done
-done
-
-# Cleanup temporary file
-rm $temp_file
-
+csv_file="resultados/atom.csv"
 
 # Write CSV header
 echo "N value, thread number, Iteration number, Number of instructions, Ins per cycle, Percentage of misses, Seconds time elapsed" > "$csv_file"
@@ -69,6 +44,5 @@ do
         
         # Write data to CSV file
         echo "$n_value, $thread_num, $iteration,$instructions,$ins_per_cycle,$misses,$time_elapsed" >> "$csv_file"
-    fi
-    
-done < $output_file
+    fi 
+done < $input_file

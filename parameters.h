@@ -10,9 +10,9 @@
 
 #include <time.h> // time(NULL)
 
-// Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912
+// Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912, 8788, 10976 N =(n**3)*4
 #ifndef N
-#define N 256
+#define N 864
 #endif
 
 #ifndef SEED // rand SEED para las velocidades

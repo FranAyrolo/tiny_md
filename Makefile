@@ -1,5 +1,5 @@
-CC      = gcc
-CFLAGS  = -Ofast -march=core-avx2 -fopenmp #-ftree-vectorize -fopt-info-vec -fopt-info-vec-missed
+CC      = gcc-12
+CFLAGS  = -Ofast -march=core-avx2 -fopenmp -ftree-vectorize #-fopt-info-vec -fopt-info-vec-missed
 WFLAGS  = -std=c11 -Wall -Wextra -Werror -g
 LDFLAGS = -lm
 
