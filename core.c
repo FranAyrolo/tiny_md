@@ -107,12 +107,12 @@ void init_vel(Vector_SOA* restrict v_velocities, float* restrict temp, float* re
     float random_array[N*3];
     xoshiro_seed(SEED);
     generate_random_floats(random_array, 3*N);
-    int k = 0;
-
+#pragma omp parallel for reduction(+:sumvx, sumvy, sumvz, sumv2)
     for (int i = 0; i < N; i++) {
-        v_velocities->x[i] = random_array[k++];
-        v_velocities->y[i] = random_array[k++];
-        v_velocities->z[i] = random_array[k++];
+        int index = i * 3;
+        v_velocities->x[i] = random_array[index];
+        v_velocities->y[i] = random_array[index + 1];
+        v_velocities->z[i] = random_array[index + 2];
 
         sumvx += v_velocities->x[i];
         sumvy += v_velocities->y[i];
@@ -129,6 +129,7 @@ void init_vel(Vector_SOA* restrict v_velocities, float* restrict temp, float* re
     *ekin = 0.5 * sumv2;
     sf = sqrt(T0 / *temp);
 
+#pragma omp parallel for
     for (int i = 0; i < N; i++) { // elimina la velocidad del centro de masa
         // y ajusta la temperatura
         v_velocities->x[i] = (v_velocities->x[i] - sumvx) * sf;
@@ -150,6 +151,7 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
         float* restrict pres, const float* temp, const float rho, const float V, const float L)
 {
     // calcula las fuerzas LJ (12-6)
+#pragma omp parallel for
     for (int i = 0; i < N; i++) {
         v_forces->x[i] = 0.0;
         v_forces->y[i] = 0.0;
@@ -223,6 +225,7 @@ void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_ve
                      const float V, const float L)
 {
 
+#pragma omp parallel for
     for (int i = 0; i < N; i++) { // actualizo posiciones
         v_positions->x[i] += v_velocities->x[i] * DT + 0.5 * v_forces->x[i] * DT * DT;
         v_positions->x[i] = pbc(v_positions->x[i], L);
@@ -240,6 +243,7 @@ void velocity_verlet(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_ve
     forces(v_positions, v_forces, epot, pres, temp, rho, V, L); // actualizo fuerzas
 
     float sumv2 = 0.0;
+#pragma omp parallel for reduction(+:sumv2)
     for (int i = 0; i < N; i++) { // actualizo velocidades
         v_velocities->x[i] += 0.5 * v_forces->x[i] * DT;
         v_velocities->y[i] += 0.5 * v_forces->y[i] * DT;
