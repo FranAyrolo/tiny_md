@@ -159,12 +159,6 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
     float rcut2 = RCUT * RCUT;
     *epot = 0.0;
 
-    // int i = 0, j = 0;
-    // float xi = 0.0, yi = 0.0, zi = 0.0;
-    // float xj = 0.0, yj = 0.0, zj = 0.0;
-    // float rx = 0.0, ry = 0.0, rz = 0.0;
-    // float rij2 = 0.0, condition = 0.0, r6inv = 0.0, fr = 0.0;
-    //float r2inv = 0.0;
 #pragma omp parallel for reduction(+:sumEpot) reduction(+:pres_vir)
     for (int i = 0; i < N - 1; i++) {
 
