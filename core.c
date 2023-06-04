@@ -146,7 +146,80 @@ inline static float minimum_image(float cordi, const float cell_length)
     return cordi;
 }
 
+void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, float* restrict epot,
+            float* restrict pres, const float* temp, const float rho, const float V, const float L)
+{
+    // Calculating the forces LJ (12-6)
+#pragma omp parallel for
+    for (int i = 0; i < N; i++) {
+        v_forces->x[i] = 0.0;
+        v_forces->y[i] = 0.0;
+        v_forces->z[i] = 0.0;
+    }
 
+    float pres_vir = 0.0, sumEpot = 0.0;
+    float rcut2 = RCUT * RCUT;
+    *epot = 0.0;
+
+#pragma omp parallel for reduction(+:sumEpot, pres_vir)
+    for (int i = 0; i < N - 1; i++) {
+        float xi = v_positions->x[i];
+        float yi = v_positions->y[i];
+        float zi = v_positions->z[i];
+
+        float localForceX = 0.0, localForceY = 0.0, localForceZ = 0.0;
+
+        for (int j = i + 1; j < N; j++) {
+            float xj = v_positions->x[j];
+            float yj = v_positions->y[j];
+            float zj = v_positions->z[j];
+
+            // Minimum image distance between r_i and r_j
+            float rx = xi - xj;
+            rx = minimum_image(rx, L);
+            float ry = yi - yj;
+            ry = minimum_image(ry, L);
+            float rz = zi - zj;
+            rz = minimum_image(rz, L);
+
+            float rij2 = rx * rx + ry * ry + rz * rz;
+
+            if (rij2 <= rcut2) {
+                float r2inv = 1.0 / rij2;
+                float r6inv = r2inv * r2inv * r2inv;
+                float fr = 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
+                float condition = r6inv * (r6inv - 1.0) - ECUT;
+                float fij = fr * condition;
+
+                localForceX += fij * rx;
+                localForceY += fij * ry;
+                localForceZ += fij * rz;
+
+                // Apply forces to j particle in opposite direction
+                v_forces->x[j] -= fij * rx;
+                v_forces->y[j] -= fij * ry;
+                v_forces->z[j] -= fij * rz;
+
+                sumEpot += condition;
+                pres_vir += fr * rij2;
+            }
+        }
+
+#pragma omp critical
+        {
+            v_forces->x[i] += localForceX;
+            v_forces->y[i] += localForceY;
+            v_forces->z[i] += localForceZ;
+        }
+    }
+
+    *epot = 4.0 * sumEpot - ECUT;
+    pres_vir /= (V * 3.0);
+    *pres = *temp * rho + pres_vir;
+}
+
+
+/*
 void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, float* restrict epot,
         float* restrict pres, const float* temp, const float rho, const float V, const float L)
 {
@@ -209,6 +282,7 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
     pres_vir /= (V * 3.0);
     *pres = *temp * rho + pres_vir;
 }
+*/
 
 
 inline static float pbc(float cordi, const float cell_length)
