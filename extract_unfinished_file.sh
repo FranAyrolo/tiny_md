@@ -3,9 +3,9 @@
 # Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912
 
 # Initialize variables
-input_file="resultados/atom.log"
+input_file="resultados/9900KF.log"
 # Output CSV file
-csv_file="resultados/atom.csv"
+csv_file="resultados/9900KF.csv"
 
 # Write CSV header
 echo "N value, thread number, Iteration number, Number of instructions, Ins per cycle, Percentage of misses, Seconds time elapsed" > "$csv_file"

@@ -3,15 +3,15 @@
 # Valores que podemos usar de N = 256, 500, 864, 1372, 2048, 2916, 4000, 5324, 6912
 
 # Initialize variables
-num_iterations=5
+num_iterations=2
 temp_file="resultados/temp.log"
-output_file="resultados/atom.log"
+output_file="resultados/input.log"
 # Output CSV file
-csv_file="resultados/atom.csv"
+csv_file="resultados/input.csv"
 
-numThreads=(1 2 4 8 12 16)
+numThreads=(1 2 4 8 16)
 
-enes=(256 500 864 1372 2048 2916 4000 5324 6912)
+enes=(256 500 864 1372 2048 2916 4000 5324 6912 10976)
 
 # Loop over the command
 for n in "${enes[@]}"; do
@@ -19,6 +19,7 @@ for n in "${enes[@]}"; do
     make CPPFLAGS="-DN=$n"
     for threads in "${numThreads[@]}"; do
         export OMP_NUM_THREADS=$threads 
+        export OMP_BIND_PROC=true
         for((i=1; i <= num_iterations; i++)); do
             echo "N= $n Num. Threads $threads - Iteration $i"
             echo "N= $n Num. Threads $threads - Iteration $i" >> $output_file
