@@ -175,8 +175,7 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
 
     #pragma omp parallel default(private) reduction(+:sumEpot, pres_vir) \
     firstprivate(priv_forces_x, priv_forces_y, priv_forces_z, L, rcut2) \
-    private(i, j) \
-    shared(xpositions, ypositions, zpositions, v_forces) 
+    private(i, j) shared(xpositions, ypositions, zpositions, v_forces) 
     {
 
     #pragma omp for nowait
