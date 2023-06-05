@@ -5,11 +5,11 @@
 # Initialize variables
 num_iterations=1
 temp_file="resultados/temp.log"
-output_file="resultados/pruebas_mejoradas.log"
+output_file="resultados/output.log"
 # Output CSV file
-csv_file="resultados/pruebas_mejoradas_9900KF.csv"
+csv_file="resultados/output9900KF.csv"
 
-numThreads=(1 2 4 8)
+numThreads=(2 4 8)
 
 enes=(5324 6912 10976)
 
@@ -20,7 +20,6 @@ for n in "${enes[@]}"; do
     for threads in "${numThreads[@]}"; do
         export OMP_NUM_THREADS=$threads 
         export OMP_BIND_PROC=true
-        export OMP_PLACES=threads
         for((i=1; i <= num_iterations; i++)); do
             echo "N= $n Num. Threads $threads - Iteration $i"
             echo "N= $n Num. Threads $threads - Iteration $i" >> $output_file
