@@ -151,7 +151,6 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
         float* restrict pres, const float* temp, const float rho, const float V, const float L)
 {
     // calcula las fuerzas LJ (12-6)
-#pragma omp parallel for
     for (int i = 0; i < N; i++) {
         v_forces->x[i] = 0.0;
         v_forces->y[i] = 0.0;
@@ -161,18 +160,36 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
     float rcut2 = RCUT * RCUT;
     *epot = 0.0;
 
-#pragma omp parallel for reduction(+:sumEpot) reduction(+:pres_vir)
-    for (int i = 0; i < N - 1; i++) {
+    float priv_forces_x[N] = {0.0}, priv_forces_y[N] = {0.0}, priv_forces_z[N] = {0.0};
+    int i = 0, j = 0;
+    //float xi = 0.0, yi = 0.0, zi = 0.0;
 
-        float xi = v_positions->x[i];
-        float yi = v_positions->y[i];
-        float zi = v_positions->z[i];
+    float *xpositions = v_positions->x;
+    float *ypositions = v_positions->y;
+    float *zpositions = v_positions->z;
 
-        for (int j = i + 1; j < N; j++) {
+    //float *xforces = v_forces->x;
+    //float *yforces = v_forces->y;
+    //float *zforces = v_forces->z;
 
-            float xj = v_positions->x[j];
-            float yj = v_positions->y[j];
-            float zj = v_positions->z[j];
+
+    #pragma omp parallel default(private) reduction(+:sumEpot, pres_vir) \
+    firstprivate(priv_forces_x, priv_forces_y, priv_forces_z, L, rcut2) \
+    private(i, j) \
+    shared(xpositions, ypositions, zpositions, v_forces) 
+    {
+
+    #pragma omp for nowait
+    for (i = 0; i < N - 1; i++) {
+        float xi = xpositions[i];
+        float yi = ypositions[i];
+        float zi = zpositions[i];
+
+        for (j = i + 1; j < N; j++) {
+
+            float xj = xpositions[j];
+            float yj = ypositions[j];
+            float zj = zpositions[j];
 
             // distancia mínima entre r_i y r_j
             float rx = xi - xj;
@@ -190,20 +207,27 @@ void forces(Vector_SOA* restrict v_positions, Vector_SOA* restrict v_forces, flo
 
             float fr = condition * 24.0 * r2inv * r6inv * (2.0 * r6inv - 1.0);
 
-            v_forces->x[i] += condition * fr * rx;
-            v_forces->y[i] += condition * fr * ry;
-            v_forces->z[i] += condition * fr * rz;
+            priv_forces_x[i] += condition * fr * rx;
+            priv_forces_y[i] += condition * fr * ry;
+            priv_forces_z[i] += condition * fr * rz;
 
-            v_forces->x[j] -= condition * fr * rx;
-            v_forces->y[j] -= condition * fr * ry;
-            v_forces->z[j] -= condition * fr * rz;
+            priv_forces_x[j] -= condition * fr * rx;
+            priv_forces_y[j] -= condition * fr * ry;
+            priv_forces_z[j] -= condition * fr * rz;
 
             sumEpot += condition * (4.0 * r6inv * (r6inv - 1.0) - ECUT);
 
             pres_vir += condition * fr * rij2;
         }
     }
+    for(int k = 0; k < N; k++) {
+        v_forces->x[k] += priv_forces_x[k];
+        v_forces->y[k] += priv_forces_y[k];
+        v_forces->z[k] += priv_forces_z[k];
+    }
 
+
+    }
     *epot = sumEpot;
 
     pres_vir /= (V * 3.0);
